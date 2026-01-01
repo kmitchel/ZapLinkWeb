@@ -169,7 +169,7 @@ app.get('/stream/:channelNum', async (req, res) => {
 
     // Write temp config
     const tempConfPath = path.join(os.tmpdir(), `zap-${tuner.id}-${channel.serviceId}.conf`);
-    fs.writeFileSync(tempConfPath, '[' + matchedBlock); // split removed the opening bracket
+    fs.writeFileSync(tempConfPath, matchedBlock); // matchedBlock already starts with [
 
     // 1. Start dvbv5-zap with temp config
     // We use the UNIQUE name we just generated: "Name-ServiceID"
