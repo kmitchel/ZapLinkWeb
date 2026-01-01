@@ -249,11 +249,13 @@ app.get('/stream/:channelNum', async (req, res) => {
         cleanup();
     });
 
-    // Client disconnect
-    req.on('close', () => {
-        console.log(`Client disconnected [Tuner ${tuner.id}]`);
+    // Client disconnect handling
+    const onDisconnect = () => {
+        console.log(`Client disconnected (socket close) [Tuner ${tuner.id}]`);
         cleanup();
-    });
+    };
+    req.on('close', onDisconnect);
+    res.on('close', onDisconnect);
 
     // Handle zap errors
     zap.on('error', (err) => {
