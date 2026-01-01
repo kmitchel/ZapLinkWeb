@@ -162,21 +162,22 @@ app.get('/stream/:channelNum', async (req, res) => {
 
     if (channel.serviceId) {
         console.log(`Filtering for Service ID: ${channel.serviceId}`);
-        // Map the specific program ID. 
-        // Syntax often is -map 0:p:<program_id> or just relying on the player to pick if we send all.
-        // But since you said 45.1 plays when 45.2 is asked, we are sending both and player picks first.
-        // We need to valid stream mapping. 
-        // ffmpeg -i input.ts -map 0:p:1001 -c copy ...
+        // Use a more robust mapping strategy for MPEG-TS
+        // This tells ffmpeg to treat the input as a set of programs and pick the one with the matching ID
         ffmpegArgs.push('-map', `0:p:${channel.serviceId}`);
-        // Note: some ffmpeg versions use -map 0:m:program_id or similar. '0:p:ID' is standard for program mapping.
+    } else {
+        // Fallback if no service ID, map everything (likely will play first program)
+        ffmpegArgs.push('-map', '0');
     }
 
     ffmpegArgs.push(
         '-c', 'copy',
+        '-ignore_unknown', // Ignore streams that are not mapped or recognized
         '-f', 'mpegts',
         'pipe:1'
     );
 
+    console.log(`Spawning FFmpeg with args: ${ffmpegArgs.join(' ')}`);
     const ffmpeg = spawn('ffmpeg', ffmpegArgs);
     tuner.processes.ffmpeg = ffmpeg;
 
