@@ -170,7 +170,20 @@ app.get('/stream/:channelNum', async (req, res) => {
         'Connection': 'keep-alive'
     });
 
-    ffmpeg.stdout.pipe(res);
+    // Handle ffmpeg output pipe errors (e.g. client disconnect)
+    ffmpeg.stdout.on('error', (err) => {
+        if (err.code === 'EPIPE' || err.code === 'ECONNRESET') {
+            console.log(`FFmpeg EPIPE/ECONNRESET [Tuner ${tuner.id}] - client likely disconnected`);
+            cleanup();
+        } else {
+            console.error(`FFmpeg stdout error [Tuner ${tuner.id}]:`, err);
+        }
+    });
+
+    ffmpeg.stdout.pipe(res).on('error', (err) => {
+        console.warn(`Response pipe error [Tuner ${tuner.id}]:`, err);
+        cleanup();
+    });
 
     // Logging helpers
     ffmpeg.stderr.on('data', (data) => console.log(`FFmpeg [Tuner ${tuner.id}]: ${data}`));
