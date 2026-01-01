@@ -44,6 +44,7 @@ try {
 
 const CHANNELS_CONF = process.env.CHANNELS_CONF || '/etc/dvb/channels.conf';
 const ENABLE_PREEMPTION = process.env.ENABLE_PREEMPTION === 'true'; // Default: false
+const ENABLE_TRANSCODING = process.env.ENABLE_TRANSCODING !== 'false'; // Default: true, set to 'false' to disable
 
 // Dynamic Channel Loader
 let CHANNELS = [];
@@ -190,36 +191,36 @@ app.get('/stream/:channelNum', async (req, res) => {
     });
 
     // 2. Start ffmpeg to read from stdin (piped from zap)
-    // FFmpeg options:
-    // -i pipe:0 : input from stdin
-    // Software Transcoding for compatibility/streaming:
-    // -c:v libx264 (H.264 Video)
-    // -preset ultrafast (Minimize latency)
-    // -tune zerolatency
-    // -c:a aac (AAC Audio)
+
+    // Base Args
     const ffmpegArgs = [
         '-fflags', '+genpts+discardcorrupt',
         '-err_detect', 'ignore_err',
         '-analyzeduration', '2000000',
         '-probesize', '2000000',
-        '-i', 'pipe:0',
-
-        // Video: H.264, Ultrafast for live
-        '-c:v', 'libx264',
-        '-preset', 'ultrafast',
-        '-tune', 'zerolatency',
-        '-crf', '23',       // Reasonable quality
-        '-maxrate', '5M',   // Cap bitrate
-        '-bufsize', '10M',
-
-        // Audio: AAC Stereo
-        '-c:a', 'aac',
-        '-b:a', '128k',
-        '-ac', '2',
-
-        '-f', 'mpegts',
-        'pipe:1'
+        '-i', 'pipe:0'
     ];
+
+    if (ENABLE_TRANSCODING) {
+        // Software Transcoding (H.264/AAC)
+        ffmpegArgs.push(
+            '-c:v', 'libx264',
+            '-preset', 'ultrafast',
+            '-tune', 'zerolatency',
+            '-crf', '23',
+            '-maxrate', '5M',
+            '-bufsize', '10M',
+            '-c:a', 'aac',
+            '-b:a', '128k',
+            '-ac', '2'
+        );
+    } else {
+        // Stream Copy (Pass-through)
+        ffmpegArgs.push('-c', 'copy');
+    }
+
+    // Output format
+    ffmpegArgs.push('-f', 'mpegts', 'pipe:1');
 
     console.log(`Spawning FFmpeg with args: ${ffmpegArgs.join(' ')}`);
     const ffmpeg = spawn('ffmpeg', ffmpegArgs);
