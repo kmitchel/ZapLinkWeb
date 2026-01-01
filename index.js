@@ -7,22 +7,47 @@ const PORT = process.env.PORT || 3000;
 
 // Tuner Configuration
 // Adjust these adapter paths based on your system (e.g., /dev/dvb/adapter0, /dev/dvb/adapter1)
-const TUNERS = [
-    { id: 0, adapter: '/dev/dvb/adapter0', inUse: false },
-    { id: 1, adapter: '/dev/dvb/adapter1', inUse: false }
-];
+// Tuner Configuration: Dynamic Discovery
+let TUNERS = [];
+try {
+    if (fs.existsSync('/dev/dvb')) {
+        const files = fs.readdirSync('/dev/dvb');
+        const adapters = files.filter(f => f.startsWith('adapter'));
+
+        // Sort adapters (adapter0, adapter1...)
+        adapters.sort((a, b) => {
+            const numA = parseInt(a.replace('adapter', ''), 10);
+            const numB = parseInt(b.replace('adapter', ''), 10);
+            return numA - numB;
+        });
+
+        TUNERS = adapters.map(name => {
+            const id = parseInt(name.replace('adapter', ''), 10);
+            return { id: id, adapter: `/dev/dvb/${name}`, inUse: false };
+        });
+        console.log(`Discovered ${TUNERS.length} tuners: ${TUNERS.map(t => t.adapter).join(', ')}`);
+    } else {
+        console.warn('/dev/dvb not found. Mocking 2 tuners for development.');
+        TUNERS = [
+            { id: 0, adapter: '/dev/dvb/adapter0', inUse: false },
+            { id: 1, adapter: '/dev/dvb/adapter1', inUse: false }
+        ];
+    }
+} catch (e) {
+    console.error('Failed to discover tuners:', e);
+    // Fallback
+    TUNERS = [
+        { id: 0, adapter: '/dev/dvb/adapter0', inUse: false },
+        { id: 1, adapter: '/dev/dvb/adapter1', inUse: false }
+    ];
+}
 
 const CHANNELS_CONF = process.env.CHANNELS_CONF || '/etc/dvb/channels.conf';
 const ENABLE_PREEMPTION = process.env.ENABLE_PREEMPTION === 'true'; // Default: false
 
 // Dynamic Channel Loader
 let CHANNELS = [];
-// ... (lines omitted for brevity in tool input, but sticking to valid replace)
-// Actually better to just modify the specific blocks or use multi_replace if separate.
-// But index.js is small enough I can try to hit the top variable and the function.
 
-// Let's do 2 separate edits or use multi_replace_file_content.
-// I will use multi_replace.
 
 
 function loadChannels() {
