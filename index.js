@@ -44,7 +44,8 @@ try {
 
 const CHANNELS_CONF = process.env.CHANNELS_CONF || '/etc/dvb/channels.conf';
 const ENABLE_PREEMPTION = process.env.ENABLE_PREEMPTION === 'true'; // Default: false
-const ENABLE_TRANSCODING = process.env.ENABLE_TRANSCODING !== 'false'; // Default: true, set to 'false' to disable
+const ENABLE_TRANSCODING = process.env.ENABLE_TRANSCODING !== 'false'; // Default: true
+const ENABLE_QSV = process.env.ENABLE_QSV === 'true'; // Default: false
 
 // Dynamic Channel Loader
 let CHANNELS = [];
@@ -202,18 +203,49 @@ app.get('/stream/:channelNum', async (req, res) => {
     ];
 
     if (ENABLE_TRANSCODING) {
-        // Software Transcoding (H.264/AAC)
-        ffmpegArgs.push(
-            '-c:v', 'libx264',
-            '-preset', 'ultrafast',
-            '-tune', 'zerolatency',
-            '-crf', '23',
-            '-maxrate', '5M',
-            '-bufsize', '10M',
-            '-c:a', 'aac',
-            '-b:a', '128k',
-            '-ac', '2'
-        );
+        if (ENABLE_QSV) {
+            // Hardware Transcoding (Intel QSV)
+            // MUST deinterlace first as QSV often fails on interlaced input
+            // -init_hw_device qsv=hw -filter_hw_device hw 
+            // -vf "vpp_qsv=deinterlace=2" (Advanced deinterlacing) or "deinterlace_qsv"
+            // For safety/portability, we'll try standard deinterlace_qsv
+
+            // Note: input is pipe:0, so we need to map hw device first usually,
+            // but for simple cases just specifying codec works if VAAPI/QSV is set up.
+            // We adding global args for hw init might be redundant depending on ffmpeg build,
+            // but let's stick to standard encoding params.
+
+            ffmpegArgs.push(
+                '-init_hw_device', 'qsv=hw',
+                '-filter_hw_device', 'hw',
+                '-c:v', 'h264_qsv',
+                // Deinterlace using QSV VPP (Video Post Processing)
+                '-vf', 'vpp_qsv=deinterlace=2',
+                '-preset', 'veryfast', // QSV presets: veryfast, faster, fast, medium, slow, veryslow
+                '-b:v', '5M',
+                '-maxrate', '6M',
+                '-bufsize', '12M',
+                '-c:a', 'aac',
+                '-b:a', '128k',
+                '-ac', '2'
+            );
+        } else {
+            // Software Transcoding (H.264/AAC)
+            // ... existing software logic ...
+            // We can use yadif for deinterlacing in software too, usually good idea for TV
+            ffmpegArgs.push(
+                '-c:v', 'libx264',
+                '-preset', 'ultrafast',
+                '-tune', 'zerolatency',
+                '-vf', 'yadif=0:-1:0', // Simple deinterlace (send frame for each field)
+                '-crf', '23',
+                '-maxrate', '5M',
+                '-bufsize', '10M',
+                '-c:a', 'aac',
+                '-b:a', '128k',
+                '-ac', '2'
+            );
+        }
     } else {
         // Stream Copy (Pass-through)
         ffmpegArgs.push('-c', 'copy');
