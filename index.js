@@ -203,31 +203,16 @@ app.get('/stream/:channelNum', async (req, res) => {
 
     // FFmpeg options:
     // -i : input path
-    // -map 0:p:<serviceId> : Select the specific program/service ID from the TS
     // -c copy : copy stream
     // -f mpegts : output format
     const ffmpegArgs = [
         '-analyzeduration', '10000000',
         '-probesize', '10000000',
         '-i', dvrPath,
-    ];
-
-    if (channel.serviceId) {
-        console.log(`Filtering for Service ID: ${channel.serviceId}`);
-        // Use a more robust mapping strategy for MPEG-TS
-        // This tells ffmpeg to treat the input as a set of programs and pick the one with the matching ID
-        ffmpegArgs.push('-map', `0:p:${channel.serviceId}`);
-    } else {
-        // Fallback if no service ID, map everything (likely will play first program)
-        ffmpegArgs.push('-map', '0');
-    }
-
-    ffmpegArgs.push(
         '-c', 'copy',
-        '-ignore_unknown', // Ignore streams that are not mapped or recognized
         '-f', 'mpegts',
         'pipe:1'
-    );
+    ];
 
     console.log(`Spawning FFmpeg with args: ${ffmpegArgs.join(' ')}`);
     const ffmpeg = spawn('ffmpeg', ffmpegArgs);
