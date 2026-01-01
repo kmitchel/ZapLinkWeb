@@ -14,58 +14,53 @@ const TUNERS = [
 
 const CHANNELS_CONF = process.env.CHANNELS_CONF || '/etc/dvb/channels.conf';
 
-// Mock Channel List - Replace with actual frequency data
-const CHANNELS = [
-    { number: '45.1', name: 'WFWC-CD', serviceId: 1001 },
-    { number: '45.2', name: 'WFWC-CD', serviceId: 1002 },
-    { number: '45.3', name: 'WFWC-CD', serviceId: 1003 },
-    { number: '45.4', name: 'WFWC-CD', serviceId: 1004 },
-    { number: '45.5', name: 'WFWC-CD', serviceId: 1005 },
-    { number: '45.6', name: 'WFWC-CD', serviceId: 1006 },
-    { number: '45.7', name: 'WFWC-CD', serviceId: 1007 },
-    { number: '45.8', name: 'WFWC-CD', serviceId: 1008 },
-    { number: '38.1', name: 'WEIJ HD', serviceId: 3 },
-    { number: '38.4', name: 'COZI TV', serviceId: 6 },
-    { number: '38.2', name: 'SBN', serviceId: 4 },
-    { number: '38.8', name: 'QUEST', serviceId: 10 },
-    { number: '38.5', name: 'IONPLUS', serviceId: 7 },
-    { number: '38.9', name: 'ONTV4U', serviceId: 11 },
-    { number: '38.7', name: 'TOONS', serviceId: 9 },
-    { number: '38.10', name: 'BIZ TV', serviceId: 12 },
-    { number: '38.3', name: 'WEST', serviceId: 5 },
-    { number: '38.6', name: 'JTV', serviceId: 8 },
-    { number: '38.11', name: 'GDT', serviceId: 13 },
-    { number: '39.1', name: 'PBS FW', serviceId: 1 },
-    { number: '39.2', name: 'PBSKIDS', serviceId: 2 },
-    { number: '39.3', name: 'CREATE', serviceId: 3 },
-    { number: '39.4', name: 'World', serviceId: 4 },
-    { number: '39.5', name: 'PBS WX', serviceId: 5 },
-    { number: '39.6', name: 'PBS ARS', serviceId: 6 },
-    { number: '55.1', name: 'WFFT-TV', serviceId: 3 },
-    { number: '55.2', name: 'Bounce', serviceId: 4 },
-    { number: '55.3', name: 'Antenna', serviceId: 5 },
-    { number: '16.1', name: 'WCUH-LD', serviceId: 1001 },
-    { number: '16.2', name: 'WCUH-LD', serviceId: 1002 },
-    { number: '16.3', name: 'WCUH-LD', serviceId: 1003 },
-    { number: '16.4', name: 'WCUH-LD', serviceId: 1004 },
-    { number: '16.5', name: 'WCUH-LD', serviceId: 1005 },
-    { number: '16.6', name: 'WCUH-LD', serviceId: 1006 },
-    { number: '16.7', name: 'WCUH-LD', serviceId: 1007 },
-    { number: '21.1', name: 'WPTAABC', serviceId: 1 },
-    { number: '21.2', name: 'WPTANBC', serviceId: 2 },
-    { number: '21.3', name: 'WPTAMY', serviceId: 3 },
-    { number: '15.1', name: 'WANE-HD', serviceId: 3 },
-    { number: '15.2', name: 'ION', serviceId: 4 },
-    { number: '15.3', name: 'LAFF', serviceId: 5 },
-    { number: '15.4', name: 'Escape', serviceId: 6 },
-    { number: '33.1', name: 'WISECW', serviceId: 1 },
-    { number: '33.2', name: 'Justice', serviceId: 2 },
-    { number: '33.3', name: 'Grit', serviceId: 3 },
-    { number: '33.4', name: 'CourtTV', serviceId: 4 },
-    { number: '33.5', name: 'Start', serviceId: 5 },
-    { number: '33.6', name: 'MeTV', serviceId: 6 },
-    { number: '33.7', name: 'DABL', serviceId: 7 }
-];
+// Dynamic Channel Loader
+let CHANNELS = [];
+
+function loadChannels() {
+    console.log(`Loading channels from ${CHANNELS_CONF}...`);
+    try {
+        if (!require('fs').existsSync(CHANNELS_CONF)) {
+            console.warn('Channels config not found, using empty list.');
+            return;
+        }
+
+        const data = require('fs').readFileSync(CHANNELS_CONF, 'utf8');
+        const entries = data.split('[');
+
+        CHANNELS = [];
+
+        entries.forEach(entry => {
+            if (!entry.trim()) return;
+            const lines = entry.split('\n');
+            const name = lines[0].replace(']', '').trim();
+            const serviceIdLine = lines.find(l => l.trim().startsWith('SERVICE_ID'));
+            const vChannelLine = lines.find(l => l.trim().startsWith('VCHANNEL'));
+
+            if (serviceIdLine && vChannelLine) {
+                const serviceId = serviceIdLine.split('=')[1].trim();
+                const vChannel = vChannelLine.split('=')[1].trim();
+
+                CHANNELS.push({
+                    number: vChannel,
+                    name: name,
+                    serviceId: serviceId
+                });
+            }
+        });
+
+        console.log(`Loaded ${CHANNELS.length} channels.`);
+
+        // Sort by channel number
+        CHANNELS.sort((a, b) => parseFloat(a.number) - parseFloat(b.number));
+
+    } catch (e) {
+        console.error('Failed to parse channels.conf:', e);
+    }
+}
+
+// Load immediately
+loadChannels();
 
 // Helper to get an available tuner
 function getFreeTuner() {
