@@ -192,15 +192,31 @@ app.get('/stream/:channelNum', async (req, res) => {
     // 2. Start ffmpeg to read from stdin (piped from zap)
     // FFmpeg options:
     // -i pipe:0 : input from stdin
-    // -c copy : copy stream
-    // -f mpegts : output format
+    // Software Transcoding for compatibility/streaming:
+    // -c:v libx264 (H.264 Video)
+    // -preset ultrafast (Minimize latency)
+    // -tune zerolatency
+    // -c:a aac (AAC Audio)
     const ffmpegArgs = [
         '-fflags', '+genpts+discardcorrupt',
         '-err_detect', 'ignore_err',
         '-analyzeduration', '2000000',
         '-probesize', '2000000',
         '-i', 'pipe:0',
-        '-c', 'copy',
+
+        // Video: H.264, Ultrafast for live
+        '-c:v', 'libx264',
+        '-preset', 'ultrafast',
+        '-tune', 'zerolatency',
+        '-crf', '23',       // Reasonable quality
+        '-maxrate', '5M',   // Cap bitrate
+        '-bufsize', '10M',
+
+        // Audio: AAC Stereo
+        '-c:a', 'aac',
+        '-b:a', '128k',
+        '-ac', '2',
+
         '-f', 'mpegts',
         'pipe:1'
     ];
