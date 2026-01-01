@@ -184,47 +184,36 @@ app.get('/stream/:channelNum', async (req, res) => {
     const tempConfPath = path.join(os.tmpdir(), `zap-${tuner.id}-${channel.serviceId}.conf`);
     fs.writeFileSync(tempConfPath, matchedBlock); // matchedBlock already starts with [
 
-    // Allow the hardware connection to settle before retuning
-    await delay(500);
-
     // 1. Start dvbv5-zap with temp config
     // We use the UNIQUE name we just generated: "Name-ServiceID"
     const uniqueName = `${channel.name}-${channel.serviceId}`;
 
+    // Use '-o -' to pipe the MPEG-TS stream to stdout. 
+    // This avoids 'Device or resource busy' errors on /dev/dvb/.../dvr0
     const zap = spawn('dvbv5-zap', [
         '-c', tempConfPath,
         '-r',
         '-a', tuner.id,
+        '-o', '-',
         uniqueName
     ]);
     tuner.processes.zap = zap;
 
     zap.on('error', (err) => {
         console.error(`Tuner ${tuner.id} zap error:`, err);
-        // If zap fails to start, cleanup immediately
         cleanup();
         if (!res.headersSent) res.status(500).send('Tuner error');
     });
 
-    // Wait slightly for lock? Or just start ffmpeg immediately. 
-    // Usually safe to start ffmpeg immediately as it will block on reading dvr0 until data arrives.
-
-    // Wait for the tuner to lock and populate the DVR buffer
-    // This prevents ffmpeg from failing to find the program ID in the initial probe
-    console.log('Waiting for tuner lock...');
-    await delay(500); // Reduced to 500ms
-
-    // 2. Start ffmpeg to read from dvr0 and pipe to response
-    const dvrPath = `${tuner.adapter}/dvr0`;
-
+    // 2. Start ffmpeg to read from stdin (piped from zap)
     // FFmpeg options:
-    // -i : input path
+    // -i pipe:0 : input from stdin
     // -c copy : copy stream
     // -f mpegts : output format
     const ffmpegArgs = [
         '-analyzeduration', '2000000',
         '-probesize', '2000000',
-        '-i', dvrPath,
+        '-i', 'pipe:0',
         '-c', 'copy',
         '-f', 'mpegts',
         'pipe:1'
@@ -233,6 +222,9 @@ app.get('/stream/:channelNum', async (req, res) => {
     console.log(`Spawning FFmpeg with args: ${ffmpegArgs.join(' ')}`);
     const ffmpeg = spawn('ffmpeg', ffmpegArgs);
     tuner.processes.ffmpeg = ffmpeg;
+
+    // Pipe zap stdout -> ffmpeg stdin
+    zap.stdout.pipe(ffmpeg.stdin);
 
     res.writeHead(200, {
         'Content-Type': 'video/mp2t',
