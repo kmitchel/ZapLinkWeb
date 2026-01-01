@@ -70,6 +70,20 @@ function getFreeTuner() {
     return TUNERS.find(t => !t.inUse);
 }
 
+// Helper: Promise-based delay
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper: WaitForTuner with timeout
+async function waitForTuner(maxRetries = 10, interval = 500) {
+    for (let i = 0; i < maxRetries; i++) {
+        const tuner = getFreeTuner();
+        if (tuner) return tuner;
+        console.log(`No tuners available, waiting... (${i + 1}/${maxRetries})`);
+        await delay(interval);
+    }
+    return null;
+}
+
 // Generate M3U Playlist
 app.get('/lineup.m3u', (req, res) => {
     let m3u = '#EXTM3U\n';
@@ -85,7 +99,7 @@ app.get('/lineup.m3u', (req, res) => {
 });
 
 // Stream Endpoint
-app.get('/stream/:channelNum', (req, res) => {
+app.get('/stream/:channelNum', async (req, res) => {
     const channelNum = req.params.channelNum;
     const channel = CHANNELS.find(c => c.number === channelNum);
 
@@ -93,7 +107,10 @@ app.get('/stream/:channelNum', (req, res) => {
         return res.status(404).send('Channel not found');
     }
 
-    const tuner = getFreeTuner();
+    // Attempt to get a tuner, waiting up to 5 seconds if busy
+    // This allows time for the previous stream's cleanup to complete during a channel change
+    const tuner = await waitForTuner();
+
     if (!tuner) {
         return res.status(503).send('No tuners available');
     }
