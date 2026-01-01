@@ -104,7 +104,7 @@ app.get('/lineup.m3u', (req, res) => {
     const host = req.headers.host;
 
     CHANNELS.forEach(channel => {
-        m3u += `#EXTINF:-1 tvg-id="${channel.number}" tvg-name="${channel.name}",${channel.name}\n`;
+        m3u += `#EXTINF:-1 tvg-id="${channel.number}" tvg-name="${channel.name}",${channel.number} ${channel.name}\n`;
         m3u += `http://${host}/stream/${channel.number}\n`;
     });
 
@@ -206,24 +206,15 @@ app.get('/stream/:channelNum', async (req, res) => {
     });
 
     // 2. Start ffmpeg to read from stdin (piped from zap)
-    // FFmpeg options for QSV Transcoding:
-    // -init_hw_device qsv=hw : Initialize QSV hardware
-    // -filter_hw_device hw : Use the hw device for filters
+    // FFmpeg options:
     // -i pipe:0 : input from stdin
-    // -vf hwupload... : Upload frames to GPU for encoding
-    // -c:v h264_qsv : Use Intel QuickSync H.264 encoder
+    // -c copy : copy stream
+    // -f mpegts : output format
     const ffmpegArgs = [
         '-analyzeduration', '2000000',
         '-probesize', '2000000',
-        '-init_hw_device', 'qsv=hw',
-        '-filter_hw_device', 'hw',
         '-i', 'pipe:0',
-        '-vf', 'hwupload=extra_hw_frames=64,format=qsv',
-        '-c:v', 'h264_qsv',
-        '-preset', 'veryfast',
-        '-global_quality', '21',
-        '-c:a', 'aac',
-        '-b:a', '128k',
+        '-c', 'copy',
         '-f', 'mpegts',
         'pipe:1'
     ];
