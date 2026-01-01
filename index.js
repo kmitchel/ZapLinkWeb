@@ -206,15 +206,24 @@ app.get('/stream/:channelNum', async (req, res) => {
     });
 
     // 2. Start ffmpeg to read from stdin (piped from zap)
-    // FFmpeg options:
+    // FFmpeg options for QSV Transcoding:
+    // -init_hw_device qsv=hw : Initialize QSV hardware
+    // -filter_hw_device hw : Use the hw device for filters
     // -i pipe:0 : input from stdin
-    // -c copy : copy stream
-    // -f mpegts : output format
+    // -vf hwupload... : Upload frames to GPU for encoding
+    // -c:v h264_qsv : Use Intel QuickSync H.264 encoder
     const ffmpegArgs = [
         '-analyzeduration', '2000000',
         '-probesize', '2000000',
+        '-init_hw_device', 'qsv=hw',
+        '-filter_hw_device', 'hw',
         '-i', 'pipe:0',
-        '-c', 'copy',
+        '-vf', 'hwupload=extra_hw_frames=64,format=qsv',
+        '-c:v', 'h264_qsv',
+        '-preset', 'veryfast',
+        '-global_quality', '21',
+        '-c:a', 'aac',
+        '-b:a', '128k',
         '-f', 'mpegts',
         'pipe:1'
     ];
