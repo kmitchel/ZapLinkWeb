@@ -985,12 +985,8 @@ app.get('/stream/:channelNum', async (req, res) => {
         ffmpegArgs.push('-c', 'copy');
     }
 
-    // Output format: Fragmented MP4 for streaming compatibility
-    ffmpegArgs.push(
-        '-f', 'mp4',
-        '-movflags', '+frag_keyframe+empty_moov+default_base_moof',
-        'pipe:1'
-    );
+    // Output format
+    ffmpegArgs.push('-f', 'mpegts', 'pipe:1');
 
     debugLog(`Spawning FFmpeg with args: ${ffmpegArgs.join(' ')}`);
     const ffmpeg = spawn('ffmpeg', ffmpegArgs);
@@ -1015,7 +1011,7 @@ app.get('/stream/:channelNum', async (req, res) => {
     });
 
     res.writeHead(200, {
-        'Content-Type': 'video/mp4',
+        'Content-Type': 'video/mp2t',
         'Connection': 'keep-alive'
     });
 
