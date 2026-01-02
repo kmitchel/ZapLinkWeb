@@ -402,7 +402,7 @@ const EPG = {
 
                 const eventId = (section[offset] << 8) | section[offset + 1];
                 // ATSC start_time: seconds since Jan 6, 1980 00:00:00 UTC
-                const startTimeGPS = (section[offset + 2] << 24) | (section[offset + 3] << 16) | (section[offset + 4] << 8) | section[offset + 5];
+                const startTimeGPS = section.readUInt32BE(offset + 2);
                 // length_in_seconds is 22 bits, ETM_location is 2 bits.
                 const duration = ((section[offset + 6] & 0x3F) << 16) | (section[offset + 7] << 8) | section[offset + 8]; // Mask out ETM_location
                 const titleLength = section[offset + 9];
