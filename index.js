@@ -663,7 +663,10 @@ app.get('/xmltv.xml', (req, res) => {
         rows.forEach(p => {
             // Find channel number by service id
             const channel = CHANNELS.find(c => c.serviceId === p.channel_service_id);
-            if (!channel) return;
+            if (!channel) {
+                // console.warn(`[XMLTV Debug] Orphaned program for Service ID ${p.channel_service_id} (No matching channel config)`);
+                return;
+            }
 
             const start = new Date(p.start_time).toISOString().replace(/[-:]/g, '').split('.')[0] + ' +0000';
             const end = new Date(p.end_time).toISOString().replace(/[-:]/g, '').split('.')[0] + ' +0000';
