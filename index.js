@@ -522,11 +522,13 @@ const EPG = {
                         if (titleBuffer.length > 0) {
                             const numStrings = titleBuffer[0];
                             let stringOffset = 1;
-                            if (numStrings > 0 && titleBuffer.length >= stringOffset + 4) {
-                                const stringLen = titleBuffer[stringOffset + 3];
-                                console.log(`[ATSC DEBUG] MSS String 0: Len=${stringLen}`);
-                                if (titleBuffer.length >= stringOffset + 4 + stringLen) {
-                                    title = titleBuffer.slice(stringOffset + 4, stringOffset + 4 + stringLen).toString('utf8');
+                            // MSS: numStrings(1) + Lang(3) + Segments(1) + Comp(1) + Mode(1) + Len(1) + Text
+                            // Total header size for first segment is 1+3+1+1+1+1 = 8 bytes.
+                            if (numStrings > 0 && titleBuffer.length >= stringOffset + 7) {
+                                const stringLen = titleBuffer[stringOffset + 6];   // Index 7 (Len)
+                                // console.log(`[ATSC DEBUG] MSS String 0: Len=${stringLen}`);
+                                if (titleBuffer.length >= stringOffset + 7 + stringLen) {
+                                    title = titleBuffer.slice(stringOffset + 7, stringOffset + 7 + stringLen).toString('utf8');
                                     title = title.replace(/[\x00-\x09\x0B-\x1F\x7F]+/g, '').trim();
                                     console.log(`[ATSC DEBUG] Decoded Title: "${title}"`);
                                 }
