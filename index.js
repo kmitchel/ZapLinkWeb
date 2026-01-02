@@ -431,10 +431,17 @@ const EPG = {
                     break;
                 }
                 // Channel name is 14 bytes (UTF-16)
+                // Bytes 14-15: Major Channel
                 const major = ((section[offset + 14] & 0x0F) << 6) | (section[offset + 15] >> 2);
                 const minor = ((section[offset + 15] & 0x03) << 8) | section[offset + 16];
-                const programNumber = (section[offset + 18] << 8) | section[offset + 19];
-                const sourceId = (section[offset + 22] << 8) | section[offset + 23];
+
+                // Bytes 18-21: Carrier Freq
+                // Bytes 22-23: Channel TSID
+                // Bytes 24-25: Program Number
+                const programNumber = (section[offset + 24] << 8) | section[offset + 25];
+
+                // Bytes 28-29: Source ID
+                const sourceId = (section[offset + 28] << 8) | section[offset + 29];
 
                 console.log(`[ATSC VCT Verbose] Channel ${i}: Major=${major}, Minor=${minor}, Program=${programNumber}, SourceID=${sourceId}`);
 
@@ -454,7 +461,7 @@ const EPG = {
         }
     },
 
-    parseATSCEIT(section, serviceId, onFound) {
+    parseATSCEIT(section, sourceId, onFound) {
         try {
             const sectionLength = ((section[1] & 0x0F) << 8) | section[2];
             // ATSC EIT header is 10 bytes (table_id to num_events_in_section)
@@ -470,7 +477,7 @@ const EPG = {
             let offset = 10; // Start of event loop
 
             if (numEvents > 0) {
-                console.log(`[ATSC EIT] Parsing ${numEvents} events for SourceID ${sourceId} / ServiceID ${serviceId} (Table 0x${section[0].toString(16)})`);
+                console.log(`[ATSC EIT] Parsing ${numEvents} events for SourceID ${sourceId} (Table 0x${section[0].toString(16)})`);
             }
 
             for (let i = 0; i < numEvents; i++) {
@@ -542,9 +549,10 @@ const EPG = {
                 }
                 if (title && startTime > 0) {
                     onFound();
-                    console.log(`[ATSC EPG] INSERTING: "${title}" for Source ID: ${sourceId} (Starts: ${new Date(startTime).toISOString()})`);
+                    const serviceId = this.sourceMap.get(sourceId) || sourceId.toString();
+                    console.log(`[ATSC EPG] INSERTING: "${title}" for Source ID: ${sourceId} -> Service ID: ${serviceId} (Starts: ${new Date(startTime).toISOString()})`);
                     db.run("INSERT OR IGNORE INTO programs (channel_service_id, start_time, end_time, title, description) VALUES (?, ?, ?, ?, ?)",
-                        [serviceId.toString(), startTime, endTime, title, description]);
+                        [serviceId, startTime, endTime, title, description]);
                 } else {
                     console.log(`[EPG Verbose] Skipped event. Title: "${title}", Start: ${startTime}`);
                 }
