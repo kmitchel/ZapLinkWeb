@@ -588,8 +588,18 @@ const EPG = {
 
                 if (sourceId) {
                     const mapKey = `${freq}_${sourceId}`;
-                    // Find matching channel in our config (by freq and programNumber)
-                    const channel = CHANNELS.find(c => c.frequency == freq && c.serviceId == programNumber.toString());
+                    const major = ((section[offset + 14] & 0x0F) << 6) | (section[offset + 15] >> 2);
+                    const minor = ((section[offset + 15] & 0x03) << 8) | section[offset + 16];
+                    const virtualChannel = `${major}.${minor}`;
+
+                    // High Precision Mapping: Try to find by Virtual Channel number first
+                    // This fixes serviceId swaps where 15.1 and 15.3 might have crossed wires
+                    let channel = CHANNELS.find(c => c.number === virtualChannel);
+
+                    if (!channel) {
+                        // Fallback: Find matching channel in our config by freq and programNumber
+                        channel = CHANNELS.find(c => c.frequency == freq && c.serviceId == programNumber.toString());
+                    }
 
                     if (channel) {
                         if (this.sourceMap.get(mapKey) !== channel.number) {
@@ -597,10 +607,7 @@ const EPG = {
                             this.sourceMap.set(mapKey, channel.number);
                         }
                     } else {
-                        // Fallback: Use major.minor from broadcast if we don't have this channel on this mux
-                        const major = ((section[offset + 14] & 0x0F) << 6) | (section[offset + 15] >> 2);
-                        const minor = ((section[offset + 15] & 0x03) << 8) | section[offset + 16];
-                        const virtualChannel = `${major}.${minor}`;
+                        // Dynamic Map: No local config match, use broadcast metadata
                         if (!this.sourceMap.has(mapKey)) {
                             debugLog(`[ATSC VCT] Dynamic Map: ${freq} - Source ${sourceId} -> ${virtualChannel}`);
                             this.sourceMap.set(mapKey, virtualChannel);
