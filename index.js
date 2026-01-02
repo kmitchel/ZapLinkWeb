@@ -306,7 +306,8 @@ const EPG = {
             }
 
             const pid = ((buffer[i + 1] & 0x1F) << 8) | buffer[i + 2];
-            if (pid !== 18) continue;
+            // Allow DVB EPG (18) or ATSC PSIP (8187)
+            if (pid !== 18 && pid !== 8187) continue;
 
             const pusi = buffer[i + 1] & 0x40;
             const adaptation = (buffer[i + 3] & 0x30) >> 4;
