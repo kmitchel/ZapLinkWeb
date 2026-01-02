@@ -460,7 +460,6 @@ const EPG = {
             // section[8] protocol_version
             // section[9] num_events_in_section
             const numEvents = section[9];
-            console.log(`[ATSC EIT Verbose] Header: SourceID=${sourceId}, NumEvents=${numEvents}`);
             let offset = 10; // Start of event loop
 
             if (numEvents > 0) {
@@ -504,7 +503,6 @@ const EPG = {
                                 title = titleBuffer.slice(stringOffset + 4, stringOffset + 4 + stringLen).toString('utf8');
                                 // Remove null bytes and other control chars that break XML
                                 title = title.replace(/[\x00-\x09\x0B-\x1F\x7F]+/g, '').trim();
-                                console.log(`[ATSC EIT Verbose] Extracted Title: '${title}'`);
                             }
                         }
                     }
@@ -542,8 +540,6 @@ const EPG = {
                     console.log(`[ATSC EPG] INSERTING: "${title}" for Source ID: ${sourceId} -> Service ID: ${serviceId} (Starts: ${new Date(startTime).toISOString()})`);
                     db.run("INSERT OR IGNORE INTO programs (channel_service_id, start_time, end_time, title, description) VALUES (?, ?, ?, ?, ?)",
                         [serviceId, startTime, endTime, title, description]);
-                } else {
-                    if (numEvents < 5) console.log(`[EPG Verbose] Skipped event. Title: "${title}", Start: ${startTime}`);
                 }
 
                 offset = currentEventOffset; // Move to the start of the next event
