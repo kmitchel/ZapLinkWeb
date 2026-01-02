@@ -470,79 +470,69 @@ const EPG = {
             for (let i = 0; i < numEvents; i++) {
                 // Check if enough bytes remain for event_id, start_time, duration, title_length
                 if (offset + 10 > sectionLength + 3) {
+                    console.log(`[ATSC DEBUG] Offset overflow at event ${i}: ${offset} > ${sectionLength}`);
                     break;
                 }
 
                 const eventId = (section[offset] << 8) | section[offset + 1];
                 const startTimeGPS = section.readUInt32BE(offset + 2);
-                // length_in_seconds is 22 bits, ETM_location is 2 bits.
-                const duration = ((section[offset + 6] & 0x3F) << 16) | (section[offset + 7] << 8) | section[offset + 8]; // Mask out ETM_location
+                const duration = ((section[offset + 6] & 0x3F) << 16) | (section[offset + 7] << 8) | section[offset + 8];
                 const titleLength = section[offset + 9];
 
-                // GPS Epoch 1980-01-06 00:00:00 UTC. Unix Epoch 1970-01-01 00:00:00 UTC.
-                // Difference is 315964800 seconds.
+                console.log(`[ATSC DEBUG] Evt ${eventId}: Start=${startTimeGPS} Dur=${duration} TitleLen=${titleLength}`);
+
+                // GPS Epoch 1980-01-06 00:00:00 UTC. diff 315964800
                 const startTime = (startTimeGPS + 315964800) * 1000;
                 const endTime = startTime + duration * 1000;
 
                 let title = '';
                 let description = '';
-                let currentEventOffset = offset + 10; // After title_length
+                let currentEventOffset = offset + 10;
 
                 // Parse title (Multi-String Structure)
                 if (titleLength > 0 && currentEventOffset + titleLength <= section.length) {
-                    // For simplicity, we'll extract the first string from the MSS.
-                    // MSS format: num_strings (1 byte), then for each string: ISO_639_language_code (3 bytes), number_of_bytes_in_string (1 byte), string_text (variable)
                     let titleBuffer = section.slice(currentEventOffset, currentEventOffset + titleLength);
+                    console.log(`[ATSC DEBUG] Raw Title Bytes: ${titleBuffer.toString('hex')}`);
+
                     if (titleBuffer.length > 0) {
                         const numStrings = titleBuffer[0];
-                        // console.log(`[ATSC EIT Verbose] Event ${i} MSS: NumStrings=${numStrings}, Hex=${titleBuffer.toString('hex')}`);
                         let stringOffset = 1;
-                        if (numStrings > 0 && titleBuffer.length >= stringOffset + 4) { // At least one string header (lang + len)
-                            // const langCode = titleBuffer.slice(stringOffset, stringOffset + 3).toString('ascii');
+                        if (numStrings > 0 && titleBuffer.length >= stringOffset + 4) {
                             const stringLen = titleBuffer[stringOffset + 3];
+                            console.log(`[ATSC DEBUG] MSS String 0: Len=${stringLen}`);
                             if (titleBuffer.length >= stringOffset + 4 + stringLen) {
                                 title = titleBuffer.slice(stringOffset + 4, stringOffset + 4 + stringLen).toString('utf8');
-                                // Remove null bytes and other control chars that break XML
                                 title = title.replace(/[\x00-\x09\x0B-\x1F\x7F]+/g, '').trim();
+                                console.log(`[ATSC DEBUG] Decoded Title: "${title}"`);
                             }
                         }
                     }
                 }
+
                 currentEventOffset += titleLength;
 
-                // Descriptors loop (for ETM or other event descriptors)
-                // The ATSC EIT event structure has a 16-bit descriptors_length field after the title_text.
-                // The provided snippet has `descLength` which seems to be for ETM.
-                // Let's assume for now that `descLength` in the snippet refers to the total length of event descriptors.
-                // The actual ATSC EIT structure has `descriptors_length` (16 bits) after `title_text`.
-                // For simplicity, we'll skip parsing full descriptors for now and just advance the offset.
-                // If ETM is present, it's usually indicated by ETM_location bits and then an ETM_id.
-                // The provided snippet's `descLength` calculation is not standard ATSC EIT.
-                // Let's use the standard `descriptors_length` field.
-
-                // After title_length, there's a 16-bit descriptors_length
+                // Descriptors... (keeping existing logic but adding logs)
                 if (currentEventOffset + 2 <= section.length) {
-                    const descriptorsLength = ((section[currentEventOffset] & 0x0F) << 8) | section[currentEventOffset + 1]; // First 4 bits reserved
-                    currentEventOffset += 2; // Move past descriptors_length field
+                    const descriptorsLength = ((section[currentEventOffset] & 0x0F) << 8) | section[currentEventOffset + 1];
+                    currentEventOffset += 2;
                     if (currentEventOffset + descriptorsLength <= section.length) {
-                        // Here you would parse descriptors for description if needed.
-                        // For now, we just advance the offset.
                         currentEventOffset += descriptorsLength;
                     } else {
-                        console.warn(`[ATSC EPG] Descriptors length ${descriptorsLength} exceeds section boundary at offset ${currentEventOffset}. Skipping descriptors.`);
-                        currentEventOffset = section.length; // Advance to end of section to prevent out-of-bounds
+                        console.warn(`[ATSC DEBUG] Descriptors overflow.`);
+                        currentEventOffset = section.length;
                     }
                 } else {
-                    console.warn(`[ATSC EPG] Not enough bytes for descriptors_length field at offset ${currentEventOffset}.`);
+                    console.warn(`[ATSC DEBUG] No room for desc length.`);
                 }
+
                 if (title && startTime > 0) {
                     onFound();
                     const serviceId = this.sourceMap.get(sourceId) || sourceId.toString();
-                    console.log(`[ATSC EPG] INSERTING: "${title}" for Source ID: ${sourceId} -> Service ID: ${serviceId} (Starts: ${new Date(startTime).toISOString()})`);
+                    console.log(`[ATSC EPG] INSERTING: "${title}" for Source ${sourceId}->${serviceId}`);
                     db.run("INSERT OR IGNORE INTO programs (channel_service_id, start_time, end_time, title, description) VALUES (?, ?, ?, ?, ?)",
                         [serviceId, startTime, endTime, title, description]);
                 } else {
-                    if (numEvents < 50) console.log(`[EPG Verbose] Skipped event. Title: "${title}", Start: ${startTime}`);
+                    console.log(`[ATSC DEBUG] Skipped: Title="${title}" Start=${startTime}`);
                 }
 
                 offset = currentEventOffset; // Move to the start of the next event
