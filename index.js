@@ -205,23 +205,15 @@ app.get('/stream/:channelNum', async (req, res) => {
     if (ENABLE_TRANSCODING) {
         if (ENABLE_QSV) {
             // Hardware Transcoding (Intel QSV)
-            // MUST deinterlace first as QSV often fails on interlaced input
-            // -init_hw_device qsv=hw -filter_hw_device hw 
-            // -vf "vpp_qsv=deinterlace=2" (Advanced deinterlacing) or "deinterlace_qsv"
-            // For safety/portability, we'll try standard deinterlace_qsv
-
-            // Note: input is pipe:0, so we need to map hw device first usually,
-            // but for simple cases just specifying codec works if VAAPI/QSV is set up.
-            // We adding global args for hw init might be redundant depending on ffmpeg build,
-            // but let's stick to standard encoding params.
-
+            // Using software deinterlacer (yadif) + hardware upload + hardware encode
+            // This is often more stable than vpp_qsv for varied broadcast inputs
             ffmpegArgs.push(
                 '-init_hw_device', 'qsv=hw',
                 '-filter_hw_device', 'hw',
+                '-vf', 'yadif=0:-1:0,hwupload_qsv', // Software deinterlace then upload to GPU
                 '-c:v', 'h264_qsv',
-                // Deinterlace using QSV VPP (Video Post Processing)
-                '-vf', 'vpp_qsv=deinterlace=2',
-                '-preset', 'veryfast', // QSV presets: veryfast, faster, fast, medium, slow, veryslow
+                '-preset', 'veryfast',
+                '-global_quality', '23', // QSV equivalent to CRF
                 '-b:v', '5M',
                 '-maxrate', '6M',
                 '-bufsize', '12M',
