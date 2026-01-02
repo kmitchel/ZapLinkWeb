@@ -139,6 +139,18 @@ function loadChannels() {
         const data = require('fs').readFileSync(CHANNELS_CONF, 'utf8');
         const entries = data.split('[');
 
+        // Load logos if logos.json exists
+        let logos = {};
+        try {
+            const logoPath = path.resolve(process.cwd(), 'logos.json');
+            if (fs.existsSync(logoPath)) {
+                logos = JSON.parse(fs.readFileSync(logoPath, 'utf8'));
+                console.log(`[Config] Loaded ${Object.keys(logos).length} icons from logos.json`);
+            }
+        } catch (e) {
+            console.warn('[Config] Failed to parse logos.json:', e);
+        }
+
         CHANNELS = [];
 
         entries.forEach(entry => {
@@ -162,6 +174,7 @@ function loadChannels() {
                     name: name,
                     serviceId: serviceId,
                     frequency: frequency,
+                    icon: logos[vChannel] || logos[name] || null,
                     rawConfig: `[${name}]\n${entry.substring(entry.indexOf(']') + 1).trim()}`
                 });
             }
@@ -744,7 +757,8 @@ app.get('/lineup.m3u', (req, res) => {
     const host = req.headers.host;
 
     CHANNELS.forEach(channel => {
-        m3u += `#EXTINF:-1 tvg-id="${channel.number}" tvg-name="${channel.name}",${channel.number} ${channel.name}\n`;
+        let logoAttr = channel.icon ? ` tvg-logo="${channel.icon}"` : "";
+        m3u += `#EXTINF:-1 tvg-id="${channel.number}" tvg-name="${channel.name}"${logoAttr},${channel.number} ${channel.name}\n`;
         m3u += `http://${host}/stream/${channel.number}\n`;
     });
 
@@ -768,6 +782,7 @@ app.get('/xmltv.xml', (req, res) => {
         CHANNELS.forEach(c => {
             xml += `  <channel id="${c.number}">\n`;
             xml += `    <display-name>${escapeXml(c.name)}</display-name>\n`;
+            if (c.icon) xml += `    <icon src="${escapeXml(c.icon)}" />\n`;
             xml += '  </channel>\n';
         });
 

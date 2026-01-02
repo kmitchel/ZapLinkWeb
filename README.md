@@ -45,6 +45,16 @@ sudo apt install v4l-utils ffmpeg nodejs npm sqlite3
    dvbv5-scan us-ATSC-center-frequencies-8VSB > channels.conf
    ```
 
+4. **Channel Icons (Optional)**:
+   Create a `logos.json` in the project root to map channel numbers or names to icon URLs:
+   ```json
+   {
+     "15.1": "https://example.com/abc-logo.png",
+     "Bounce 55.2": "https://example.com/bounce.png"
+   }
+   ```
+   The app will automatically include these in the M3U (`tvg-logo`) and XMLTV (`<icon src="..." />`) outputs.
+
 ## 🚦 Usage
 
 Start the server (usually requires `sudo` or being in the `video` group to access DVB devices):
