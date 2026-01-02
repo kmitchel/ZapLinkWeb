@@ -2,7 +2,9 @@ const express = require('express');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('epg.db');
+const dbPath = 'epg.db';
+const dbExists = fs.existsSync(dbPath);
+const db = new sqlite3.Database(dbPath);
 
 // Initialize EPG Database
 db.serialize(() => {
@@ -653,8 +655,14 @@ const EPG = {
 
 // Schedule EPG grab every 15 minutes
 setInterval(() => EPG.grab(), 15 * 60 * 1000);
-// Priority: Initial grab on startup
-EPG.grab();
+// Priority: Initial grab on startup ONLY if database is missing
+if (!dbExists) {
+    console.log('[EPG] epg.db not found. Starting initial full scan...');
+    EPG.grab();
+} else {
+    console.log('[EPG] epg.db found. Skipping initial scan (will refresh in 15m).');
+    EPG.isInitialScanDone = true;
+}
 
 // Generate M3U Playlist
 app.get('/lineup.m3u', (req, res) => {
