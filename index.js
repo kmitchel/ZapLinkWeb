@@ -76,7 +76,54 @@ let lastTunerIndex = -1; // For Round-Robin selection
 
 
 
+// Help: Ensure channels.conf has unique section names
+function ensureUniqueChannelsFile() {
+    try {
+        if (!fs.existsSync(CHANNELS_CONF)) return;
+        const data = fs.readFileSync(CHANNELS_CONF, 'utf8');
+        const sections = data.split(/(?=\[)/);
+        const nameMap = new Map();
+
+        sections.forEach(s => {
+            const match = s.match(/^\[(.*?)\]/);
+            if (match) {
+                const name = match[1];
+                nameMap.set(name, (nameMap.get(name) || 0) + 1);
+            }
+        });
+
+        const duplicates = new Set();
+        nameMap.forEach((count, name) => { if (count > 1) duplicates.add(name); });
+        if (duplicates.size === 0) return;
+
+        let modified = false;
+        const newSections = sections.map(s => {
+            const match = s.match(/^\[(.*?)\]/);
+            if (match) {
+                const name = match[1];
+                if (duplicates.has(name)) {
+                    const vChannelMatch = s.match(/VCHANNEL\s*=\s*(.*)/);
+                    if (vChannelMatch) {
+                        const vChannel = vChannelMatch[1].trim();
+                        modified = true;
+                        return s.replace(`[${name}]`, `[${name} ${vChannel}]`);
+                    }
+                }
+            }
+            return s;
+        });
+
+        if (modified) {
+            console.log(`[Config] Disambiguating duplicate sections in ${CHANNELS_CONF}...`);
+            fs.writeFileSync(CHANNELS_CONF, newSections.join(''));
+        }
+    } catch (e) {
+        console.error('[Config] Failed to disambiguate channels file:', e);
+    }
+}
+
 function loadChannels() {
+    ensureUniqueChannelsFile();
     console.log(`Loading channels from ${CHANNELS_CONF}...`);
     try {
         if (!require('fs').existsSync(CHANNELS_CONF)) {
@@ -110,10 +157,12 @@ function loadChannels() {
                     name: name,
                     serviceId: serviceId,
                     frequency: frequency,
-                    rawConfig: `[${name}]\n${entry.substring(entry.indexOf(']') + 1).trim()}` // Ensure clean newline after header
+                    rawConfig: `[${name}]\n${entry.substring(entry.indexOf(']') + 1).trim()}`
                 });
             }
         });
+
+
 
         console.log(`Loaded ${CHANNELS.length} channels:`);
         CHANNELS.forEach(c => console.log(`  - ${c.name} (Service ID: ${c.serviceId}, Chan: ${c.number})`));
@@ -306,7 +355,7 @@ const EPG = {
                 '-P', // User requested standalone flag
                 '-t', '15',
                 '-o', '-',
-                channelName
+                channel.name
             ];
 
             debugLog(`[EPG Debug] Spawning zap with args: ${JSON.stringify(args)}`);
