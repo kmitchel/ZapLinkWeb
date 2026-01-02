@@ -490,8 +490,6 @@ const EPG = {
             console.error('[ATSC EPG] Error:', e);
         }
     },
-},
-
     parseDVBEIT(section, serviceId, onFound) {
         try {
             const sectionLength = ((section[1] & 0x0F) << 8) | section[2];
