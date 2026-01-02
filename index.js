@@ -552,7 +552,7 @@ const EPG = {
                     break;
                 }
 
-                const eventId = (section[offset] << 8) | section[offset + 1];
+                const eventId = ((section[offset] & 0x3F) << 8) | section[offset + 1];
                 const startTimeGPS = section.readUInt32BE(offset + 2);
                 const duration = ((section[offset + 6] & 0x0F) << 16) | (section[offset + 7] << 8) | section[offset + 8];
                 const titleLength = section[offset + 9];
@@ -647,8 +647,8 @@ const EPG = {
             }
 
             if (desc) {
-                debugLog(`[ATSC ETT] Decoded Desc for Event ${eventId}: "${desc.substring(0, 40)}..."`);
-                db.run("UPDATE programs SET description = ? WHERE source_id = ? AND event_id = ? AND (description IS NULL OR description = '')",
+                debugLog(`[ATSC ETT] Decoded Desc for Source ${sourceId} Event ${eventId}: "${desc.substring(0, 40)}..."`);
+                db.run("UPDATE programs SET description = ? WHERE source_id = ? AND event_id = ?",
                     [desc, sourceId, eventId]);
             }
         } catch (e) {
