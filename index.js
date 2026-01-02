@@ -280,14 +280,20 @@ app.get('/stream/:channelNum', async (req, res) => {
     // Connection Watchdog
     // If the client stops reading data (e.g. mpv left open but paused/broken),
     // the pipe will backpressure and ffmpeg will stop emitting data.
+    if (tuner.watchdogInterval) clearInterval(tuner.watchdogInterval);
+
     tuner.lastActivity = Date.now();
     tuner.watchdogInterval = setInterval(() => {
+        if (tuner.cleaningUp) return; // Don't fire if already cleaning up
+
         const inactivity = Date.now() - tuner.lastActivity;
         if (inactivity > 30000) { // 30s timeout
             console.warn(`[Tuner ${tuner.id}] Watchdog: Client stalled for ${Math.round(inactivity / 1000)}s - releasing.`);
             // STOP THE WATCHDOG IMMEDIATELY to prevent spam
-            clearInterval(tuner.watchdogInterval);
-            tuner.watchdogInterval = null;
+            if (tuner.watchdogInterval) {
+                clearInterval(tuner.watchdogInterval);
+                tuner.watchdogInterval = null;
+            }
             cleanup();
         }
     }, 5000);
@@ -332,12 +338,13 @@ app.get('/stream/:channelNum', async (req, res) => {
         // Remove the killSwitch reference so we don't call it again
         tuner.killSwitch = null;
 
-        // Kill processes
+        // Kill processes as aggressively as possible
+        console.log(`Sending SIGKILL to Tuner ${tuner.id} processes...`);
         if (tuner.processes.zap) {
-            try { process.kill(tuner.processes.zap.pid, 'SIGKILL'); } catch (e) { }
+            try { tuner.processes.zap.kill('SIGKILL'); } catch (e) { }
         }
         if (tuner.processes.ffmpeg) {
-            try { process.kill(tuner.processes.ffmpeg.pid, 'SIGKILL'); } catch (e) { }
+            try { tuner.processes.ffmpeg.kill('SIGKILL'); } catch (e) { }
         }
 
         // Safety timeout to force release state if exit handler doesn't fire
