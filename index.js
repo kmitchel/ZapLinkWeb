@@ -336,6 +336,7 @@ const EPG = {
 
                 if (title && startTime > 0) {
                     programCount++;
+                    console.log(`[EPG] Found: ${title} (Service: ${serviceId})`);
                     db.run("INSERT OR IGNORE INTO programs (channel_service_id, start_time, end_time, title, description) VALUES (?, ?, ?, ?, ?)",
                         [serviceId.toString(), startTime, endTime, title, desc]);
                 }
