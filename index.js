@@ -279,6 +279,7 @@ const EPG = {
             const args = [
                 '-c', tempConf,
                 '-a', tuner.id,
+                '-P', // User requested standalone flag
                 '-t', '15',
                 '-o', '-',
                 channelName
