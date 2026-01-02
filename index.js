@@ -289,58 +289,64 @@ async function acquireTuner() {
     return null;
 }
 
-// Setup database tables with basic migration
+// Setup database tables with improved migration/initialization
 db.serialize(() => {
-    // Check if 'frequency' column exists
-    db.get("PRAGMA table_info(programs)", (err, row) => {
-        if (!err) {
+    db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='programs'", (err, row) => {
+        if (err) {
+            console.error('[DB] Error checking for table:', err);
+            return;
+        }
+
+        if (row) {
+            // Table exists, check if migration is needed
             db.all("PRAGMA table_info(programs)", (err, columns) => {
-                if (!err) {
-                    const hasFrequency = columns.some(c => c.name === 'frequency');
-                    if (!hasFrequency) {
-                        console.log('[DB] Frequency column missing. Migrating database...');
-                        // Since we need to change the PRIMARY KEY, we recreate the table
-                        db.serialize(() => {
-                            db.run("BEGIN TRANSACTION");
-                            db.run("ALTER TABLE programs RENAME TO programs_old");
-                            db.run(`CREATE TABLE programs (
-                                frequency TEXT,
-                                channel_service_id TEXT,
-                                start_time INTEGER,
-                                end_time INTEGER,
-                                title TEXT,
-                                description TEXT,
-                                event_id INTEGER,
-                                source_id INTEGER,
-                                PRIMARY KEY (frequency, channel_service_id, start_time)
-                            )`);
-                            // Try to migrate existing data (defaulting frequency to 'unknown')
-                            db.run("INSERT INTO programs (frequency, channel_service_id, start_time, end_time, title, description, event_id, source_id) SELECT 'unknown', channel_service_id, start_time, end_time, title, description, event_id, source_id FROM programs_old");
-                            db.run("DROP TABLE programs_old");
-                            db.run("CREATE INDEX IF NOT EXISTS idx_end_time ON programs(end_time)");
-                            db.run("COMMIT", (err) => {
-                                if (err) console.error('[DB] Migration failed:', err);
-                                else console.log('[DB] Migration successful.');
-                            });
+                if (err || !columns) return;
+                const hasFrequency = columns.some(c => c.name === 'frequency');
+                if (!hasFrequency) {
+                    console.log('[DB] Old database detected. Migrating to frequency-aware schema...');
+                    db.serialize(() => {
+                        db.run("BEGIN TRANSACTION");
+                        db.run("ALTER TABLE programs RENAME TO programs_old");
+                        db.run(`CREATE TABLE programs (
+                            frequency TEXT,
+                            channel_service_id TEXT,
+                            start_time INTEGER,
+                            end_time INTEGER,
+                            title TEXT,
+                            description TEXT,
+                            event_id INTEGER,
+                            source_id INTEGER,
+                            PRIMARY KEY (frequency, channel_service_id, start_time)
+                        )`);
+                        db.run("INSERT INTO programs (frequency, channel_service_id, start_time, end_time, title, description, event_id, source_id) SELECT 'unknown', channel_service_id, start_time, end_time, title, description, event_id, source_id FROM programs_old");
+                        db.run("DROP TABLE programs_old");
+                        db.run("CREATE INDEX IF NOT EXISTS idx_end_time ON programs(end_time)");
+                        db.run("COMMIT", (err) => {
+                            if (err) console.error('[DB] Migration failed:', err);
+                            else console.log('[DB] Migration completed successfully.');
                         });
-                    }
+                    });
                 }
+            });
+        } else {
+            // New database, create fresh
+            console.log('[DB] Creating fresh programs table...');
+            db.serialize(() => {
+                db.run(`CREATE TABLE IF NOT EXISTS programs (
+                    frequency TEXT,
+                    channel_service_id TEXT,
+                    start_time INTEGER,
+                    end_time INTEGER,
+                    title TEXT,
+                    description TEXT,
+                    event_id INTEGER,
+                    source_id INTEGER,
+                    PRIMARY KEY (frequency, channel_service_id, start_time)
+                )`);
+                db.run(`CREATE INDEX IF NOT EXISTS idx_end_time ON programs(end_time)`);
             });
         }
     });
-
-    db.run(`CREATE TABLE IF NOT EXISTS programs (
-        frequency TEXT,
-        channel_service_id TEXT,
-        start_time INTEGER,
-        end_time INTEGER,
-        title TEXT,
-        description TEXT,
-        event_id INTEGER,
-        source_id INTEGER,
-        PRIMARY KEY (frequency, channel_service_id, start_time)
-    )`);
-    db.run(`CREATE INDEX IF NOT EXISTS idx_end_time ON programs(end_time)`);
 });
 
 // EPG Modle
