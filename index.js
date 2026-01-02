@@ -196,25 +196,19 @@ function escapeXml(unsafe) {
     });
 }
 
-// Helper: Format date for XMLTV (Local Time + Offset)
+// Helper: Format date for XMLTV (Pure UTC for maximum compatibility)
 function formatXmltvDate(ts) {
     const d = new Date(ts);
     const pad = (n) => n.toString().padStart(2, '0');
 
-    const Y = d.getFullYear();
-    const M = pad(d.getMonth() + 1);
-    const D = pad(d.getDate());
-    const h = pad(d.getHours());
-    const m = pad(d.getMinutes());
-    const s = pad(d.getSeconds());
+    const Y = d.getUTCFullYear();
+    const M = pad(d.getUTCMonth() + 1);
+    const D = pad(d.getUTCDate());
+    const h = pad(d.getUTCHours());
+    const m = pad(d.getUTCMinutes());
+    const s = pad(d.getUTCSeconds());
 
-    let off = -d.getTimezoneOffset();
-    let sign = off >= 0 ? '+' : '-';
-    off = Math.abs(off);
-    const offH = pad(Math.floor(off / 60));
-    const offM = pad(off % 60);
-
-    return `${Y}${M}${D}${h}${m}${s} ${sign}${offH}${offM}`;
+    return `${Y}${M}${D}${h}${m}${s} +0000`;
 }
 
 // Helper: Acquire an available tuner, preempting if necessary
@@ -560,7 +554,8 @@ const EPG = {
                 // console.log(`[ATSC DEBUG] Evt ${eventId}: Start=${startTimeGPS} Dur=${duration} TitleLen=${titleLength}`);
 
                 // GPS Epoch 1980-01-06 00:00:00 UTC. diff 315964800
-                const startTime = (startTimeGPS + 315964800) * 1000;
+                // Subtracting 18 seconds to convert GPS time to UTC time (Leap Seconds)
+                const startTime = (startTimeGPS + 315964800 - 18) * 1000;
                 const endTime = startTime + duration * 1000;
 
                 let title = '';
