@@ -193,27 +193,32 @@ app.get('/stream/:channelNum', async (req, res) => {
 
     // 2. Start ffmpeg to read from stdin (piped from zap)
 
-    // Base Args
-    const ffmpegArgs = [
+    // Global/Base Args
+    const ffmpegArgs = [];
+
+    if (ENABLE_TRANSCODING && ENABLE_QSV) {
+        ffmpegArgs.push('-init_hw_device', 'qsv=hw');
+    }
+
+    ffmpegArgs.push(
         '-fflags', '+genpts+discardcorrupt',
         '-err_detect', 'ignore_err',
         '-analyzeduration', '2000000',
         '-probesize', '2000000',
         '-i', 'pipe:0'
-    ];
+    );
 
     if (ENABLE_TRANSCODING) {
         if (ENABLE_QSV) {
             // Hardware Transcoding (Intel QSV)
-            // Using software deinterlacer (yadif) + hardware upload + hardware encode
-            // This is often more stable than vpp_qsv for varied broadcast inputs
+            // 1. Software deinterlace
+            // 2. Ensure NV12 pixel format (required for QSV upload)
+            // 3. Upload to QSV hardware
             ffmpegArgs.push(
-                '-init_hw_device', 'qsv=hw',
-                '-filter_hw_device', 'hw',
-                '-vf', 'yadif=0:-1:0,hwupload_qsv', // Software deinterlace then upload to GPU
+                '-vf', 'yadif=0:-1:0,format=nv12,hwupload_qsv',
                 '-c:v', 'h264_qsv',
                 '-preset', 'veryfast',
-                '-global_quality', '23', // QSV equivalent to CRF
+                '-global_quality', '23',
                 '-b:v', '5M',
                 '-maxrate', '6M',
                 '-bufsize', '12M',
@@ -223,13 +228,11 @@ app.get('/stream/:channelNum', async (req, res) => {
             );
         } else {
             // Software Transcoding (H.264/AAC)
-            // ... existing software logic ...
-            // We can use yadif for deinterlacing in software too, usually good idea for TV
             ffmpegArgs.push(
                 '-c:v', 'libx264',
                 '-preset', 'ultrafast',
                 '-tune', 'zerolatency',
-                '-vf', 'yadif=0:-1:0', // Simple deinterlace (send frame for each field)
+                '-vf', 'yadif=0:-1:0',
                 '-crf', '23',
                 '-maxrate', '5M',
                 '-bufsize', '10M',
