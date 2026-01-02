@@ -102,7 +102,7 @@ function loadChannels() {
                     name: name,
                     serviceId: serviceId,
                     frequency: frequency,
-                    rawConfig: `[${name}]${entry.substring(entry.indexOf(']') + 1)}` // Reconstruct valid config block
+                    rawConfig: `[${name}]\n${entry.substring(entry.indexOf(']') + 1).trim()}` // Ensure clean newline after header
                 });
             }
         });
@@ -256,13 +256,14 @@ const EPG = {
 
     scanMux(tuner, channelName) {
         return new Promise((resolve) => {
+            const path = require('path');
             // Find the raw config for this channel to ensure zap finds it
             const channel = CHANNELS.find(c => c.name === channelName);
-            const tempConf = `epg_scan_${tuner.id}.conf`;
+            const tempConf = path.resolve(__dirname, `epg_scan_${tuner.id}.conf`);
 
             if (channel && channel.rawConfig) {
                 console.log(`[EPG Debug] Writing temp conf to ${tempConf} for channel '${channelName}' (len=${channelName.length})`);
-                console.log(`[EPG Debug] Config content preview:\n${channel.rawConfig.substring(0, 200)}...`);
+                // console.log(`[EPG Debug] Config content preview:\n${channel.rawConfig.substring(0, 200)}...`);
                 fs.writeFileSync(tempConf, channel.rawConfig);
             } else {
                 // Fallback to main conf if something weird happens (though muxMap comes from CHANNELS so this shouldn't fail)
