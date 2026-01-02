@@ -101,7 +101,8 @@ function loadChannels() {
                     number: vChannel,
                     name: name,
                     serviceId: serviceId,
-                    frequency: frequency
+                    frequency: frequency,
+                    rawConfig: block // Store the full config block for precise tuning
                 });
             }
         });
@@ -255,11 +256,23 @@ const EPG = {
 
     scanMux(tuner, channelName) {
         return new Promise((resolve) => {
+            // Find the raw config for this channel to ensure zap finds it
+            const channel = CHANNELS.find(c => c.name === channelName);
+            const tempConf = `epg_scan_${tuner.id}.conf`;
+
+            if (channel && channel.rawConfig) {
+                fs.writeFileSync(tempConf, channel.rawConfig);
+            } else {
+                // Fallback to main conf if something weird happens (though muxMap comes from CHANNELS so this shouldn't fail)
+                console.warn(`[EPG] Raw config not found for ${channelName}, using main conf.`);
+                const fs = require('fs'); fs.copyFileSync(CHANNELS_CONF, tempConf);
+            }
+
             const zap = spawn('dvbv5-zap', [
-                '-c', CHANNELS_CONF,
+                '-c', tempConf,
                 '-a', tuner.id,
-                '-P', '0:8187', // 0=PAT, 8187=ATSC Base. No '-r' allows explicit PIDs to work better on some drivers.
-                '-t', '15',     // Timeout in tool itself
+                '-P', '0:8187',
+                '-t', '15',
                 '-o', '-',
                 channelName
             ]);
