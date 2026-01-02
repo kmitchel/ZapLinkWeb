@@ -175,6 +175,7 @@ async function acquireTuner() {
 const EPG = {
     lastScan: 0,
     isScanning: false,
+    isInitialScanDone: false,
 
     // Helper: Parse DVB BCD and MJD to Timestamp
     parseDVBTime(mjd, bcd) {
@@ -200,49 +201,55 @@ const EPG = {
         // Check if all tuners are free
         const freeTuners = TUNERS.filter(t => !t.inUse);
         if (freeTuners.length < TUNERS.length) {
-            console.log('[EPG] Waiting for all tuners to be free to start scan...');
+            console.log('[EPG] Tuners busy, skipping scan.');
+            this.isInitialScanDone = true; // Allow streaming if scan can't start
             return;
         }
 
         this.isScanning = true;
-        console.log('[EPG] Starting background EPG scan...');
+        try {
+            console.log('[EPG] Starting background EPG scan...');
 
-        const muxMap = new Map();
-        CHANNELS.forEach(c => {
-            if (c.frequency) {
-                if (!muxMap.has(c.frequency)) muxMap.set(c.frequency, c.name);
+            const muxMap = new Map();
+            CHANNELS.forEach(c => {
+                if (c.frequency) {
+                    if (!muxMap.has(c.frequency)) muxMap.set(c.frequency, c.name);
+                }
+            });
+
+            const frequencies = Array.from(muxMap.keys());
+
+            for (const freq of frequencies) {
+                // Re-check tuner status before each mux
+                const tuner = TUNERS.find(t => !t.inUse);
+                if (!tuner) break;
+
+                tuner.inUse = true;
+                tuner.epgScanning = true;
+                const channelName = muxMap.get(freq);
+
+                console.log(`[EPG] Scanning mux at ${freq} Hz using ${channelName} on Tuner ${tuner.id}...`);
+
+                try {
+                    await this.scanMux(tuner, channelName);
+                } catch (e) {
+                    console.error(`[EPG] Error scanning mux at ${freq}:`, e);
+                }
+
+                tuner.inUse = false;
+                tuner.epgScanning = false;
+
+                // Short delay between muxes
+                await delay(2000);
             }
-        });
-
-        const frequencies = Array.from(muxMap.keys());
-
-        for (const freq of frequencies) {
-            // Re-check tuner status before each mux
-            const tuner = TUNERS.find(t => !t.inUse);
-            if (!tuner) break;
-
-            tuner.inUse = true;
-            tuner.epgScanning = true;
-            const channelName = muxMap.get(freq);
-
-            console.log(`[EPG] Scanning mux at ${freq} Hz using ${channelName} on Tuner ${tuner.id}...`);
-
-            try {
-                await this.scanMux(tuner, channelName);
-            } catch (e) {
-                console.error(`[EPG] Error scanning mux at ${freq}:`, e);
-            }
-
-            tuner.inUse = false;
-            tuner.epgScanning = false;
-
-            // Short delay between muxes
-            await delay(2000);
+        } catch (e) {
+            console.error('[EPG] Critical error during grab:', e);
+        } finally {
+            this.isScanning = false;
+            this.lastScan = Date.now();
+            this.isInitialScanDone = true;
+            console.log('[EPG] Background EPG scan complete.');
         }
-
-        this.isScanning = false;
-        this.lastScan = Date.now();
-        console.log('[EPG] Background EPG scan complete.');
     },
 
     scanMux(tuner, channelName) {
@@ -392,8 +399,8 @@ const EPG = {
 
 // Schedule EPG grab every 15 minutes
 setInterval(() => EPG.grab(), 15 * 60 * 1000);
-// Also try once at startup after a delay
-setTimeout(() => EPG.grab(), 30000);
+// Priority: Initial grab on startup
+EPG.grab();
 
 // Generate M3U Playlist
 app.get('/lineup.m3u', (req, res) => {
@@ -447,6 +454,10 @@ app.get('/xmltv.xml', (req, res) => {
 
 // Stream Endpoint
 app.get('/stream/:channelNum', async (req, res) => {
+    if (!EPG.isInitialScanDone) {
+        return res.status(503).send('Service Unavailable: Initial EPG scan in progress. Please wait a few minutes.');
+    }
+
     const channelNum = req.params.channelNum;
     const channel = CHANNELS.find(c => c.number === channelNum);
 
