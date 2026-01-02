@@ -272,15 +272,15 @@ const EPG = {
                     dataReceived = true;
                 }
                 buffer = Buffer.concat([buffer, data]);
-                if (buffer.length > 30 * 1024 * 1024) { // 30MB limit for full mux scan
+                if (buffer.length > 15 * 1024 * 1024) { // 15MB limit for full mux scan
                     zap.kill('SIGKILL');
                 }
             });
 
             const timeout = setTimeout(() => {
-                if (!dataReceived) console.warn(`[EPG] No data received for ${channelName} after 15s. Signal might be weak.`);
+                if (!dataReceived) console.warn(`[EPG] No data received for ${channelName} after 5s. Signal might be weak.`);
                 zap.kill('SIGKILL');
-            }, 60000); // 60s per mux (ATSC can be slow)
+            }, 10000); // 10s per mux (fast scan)
 
             zap.on('exit', () => {
                 clearTimeout(timeout);
