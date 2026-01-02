@@ -268,7 +268,7 @@ const EPG = {
 
             if (channel && channel.rawConfig) {
                 console.log(`[EPG Debug] Writing temp conf to ${tempConf} for channel '${channelName}' (len=${channelName.length})`);
-                // console.log(`[EPG Debug] Config content preview:\n${channel.rawConfig.substring(0, 200)}...`);
+                console.log(`[EPG Debug] Config content (JSON safe): ${JSON.stringify(channel.rawConfig)}`);
                 fs.writeFileSync(tempConf, channel.rawConfig);
             } else {
                 // Fallback to main conf if something weird happens (though muxMap comes from CHANNELS so this shouldn't fail)
@@ -276,14 +276,18 @@ const EPG = {
                 const fs = require('fs'); fs.copyFileSync(CHANNELS_CONF, tempConf);
             }
 
-            const zap = spawn('dvbv5-zap', [
+            const args = [
                 '-c', tempConf,
                 '-a', tuner.id,
                 '-P', '0:8187',
                 '-t', '15',
                 '-o', '-',
                 channelName
-            ]);
+            ];
+
+            console.log(`[EPG Debug] Spawning zap with args: ${JSON.stringify(args)}`);
+
+            const zap = spawn('dvbv5-zap', args);
 
             let buffer = Buffer.alloc(0);
             let dataReceived = false;
