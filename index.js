@@ -287,7 +287,7 @@ const EPG = {
 
             zap.stdout.on('data', (data) => {
                 if (!dataReceived) {
-                    // console.log(`[EPG] Receiving data stream for ${channelName}...`);
+                    console.log(`[EPG] Receiving data stream for ${channelName}...`);
                     dataReceived = true;
                 }
                 buffer = Buffer.concat([buffer, data]);
@@ -540,6 +540,8 @@ const EPG = {
                     console.log(`[ATSC EPG] INSERTING: "${title}" for Source ID: ${sourceId} -> Service ID: ${serviceId} (Starts: ${new Date(startTime).toISOString()})`);
                     db.run("INSERT OR IGNORE INTO programs (channel_service_id, start_time, end_time, title, description) VALUES (?, ?, ?, ?, ?)",
                         [serviceId, startTime, endTime, title, description]);
+                } else {
+                    if (numEvents < 50) console.log(`[EPG Verbose] Skipped event. Title: "${title}", Start: ${startTime}`);
                 }
 
                 offset = currentEventOffset; // Move to the start of the next event
