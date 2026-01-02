@@ -124,6 +124,21 @@ loadChannels();
 // Helper: Promise-based delay
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper: Escape XML special characters
+function escapeXml(unsafe) {
+    if (!unsafe) return "";
+    return unsafe.replace(/[<>&'"]/g, function (c) {
+        switch (c) {
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '&': return '&amp;';
+            case '\'': return '&apos;';
+            case '"': return '&quot;';
+            default: return c;
+        }
+    });
+}
+
 // Helper: Acquire an available tuner, preempting if necessary
 async function acquireTuner() {
     // 1. Try Round-Robin to find a free tuner that wasn't the last one used
@@ -671,7 +686,7 @@ app.get('/xmltv.xml', (req, res) => {
         // Channels
         CHANNELS.forEach(c => {
             xml += `  <channel id="${c.number}">\n`;
-            xml += `    <display-name>${c.name}</display-name>\n`;
+            xml += `    <display-name>${escapeXml(c.name)}</display-name>\n`;
             xml += '  </channel>\n';
         });
 
@@ -688,8 +703,8 @@ app.get('/xmltv.xml', (req, res) => {
             const end = new Date(p.end_time).toISOString().replace(/[-:]/g, '').split('.')[0] + ' +0000';
 
             xml += `  <programme start="${start}" stop="${end}" channel="${channel.number}">\n`;
-            xml += `    <title lang="en">${p.title}</title>\n`;
-            xml += `    <desc lang="en">${p.description}</desc>\n`;
+            xml += `    <title lang="en">${escapeXml(p.title)}</title>\n`;
+            xml += `    <desc lang="en">${escapeXml(p.description)}</desc>\n`;
             xml += '  </programme>\n';
         });
 
