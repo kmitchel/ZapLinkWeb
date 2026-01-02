@@ -355,7 +355,7 @@ const EPG = {
                 '-P', // User requested standalone flag
                 '-t', '15',
                 '-o', '-',
-                channel.name
+                channelName
             ];
 
             debugLog(`[EPG Debug] Spawning zap with args: ${JSON.stringify(args)}`);
