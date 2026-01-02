@@ -588,8 +588,13 @@ const EPG = {
 
                 if (sourceId) {
                     const mapKey = `${freq}_${sourceId}`;
-                    const major = ((section[offset + 14] & 0x0F) << 6) | (section[offset + 15] >> 2);
-                    const minor = ((section[offset + 15] & 0x03) << 8) | section[offset + 16];
+                    // ATSC A/65: major (10 bits), minor (10 bits)
+                    // Byte 14: RR MMMMMM (res, major high 6)
+                    // Byte 15: MMMM mmmm (major low 4, minor high 4)
+                    // Byte 16: mmmmmm SS (minor low 6, service_type high 2?) 
+                    // Note: modulation_mode is actually Byte 17 according to some specs
+                    const major = ((section[offset + 14] & 0x3F) << 4) | (section[offset + 15] >> 4);
+                    const minor = ((section[offset + 15] & 0x0F) << 6) | (section[offset + 16] >> 2);
                     const virtualChannel = `${major}.${minor}`;
 
                     // High Precision Mapping: Try to find by Virtual Channel number first
