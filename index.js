@@ -555,18 +555,19 @@ const EPG = {
 
                 currentEventOffset += titleLength;
 
-                // Descriptors... (keeping existing logic but adding logs)
-                if (currentEventOffset + 2 <= section.length) {
+                // Descriptors... 
+                if (currentEventOffset + 2 <= section.length - 4) {
                     const descriptorsLength = ((section[currentEventOffset] & 0x0F) << 8) | section[currentEventOffset + 1];
                     currentEventOffset += 2;
-                    if (currentEventOffset + descriptorsLength <= section.length) {
+                    if (currentEventOffset + descriptorsLength <= section.length - 4) {
                         currentEventOffset += descriptorsLength;
                     } else {
-                        console.warn(`[ATSC DEBUG] Descriptors overflow.`);
-                        currentEventOffset = section.length;
+                        // Descriptors overflow
+                        currentEventOffset = section.length - 4;
                     }
                 } else {
-                    console.warn(`[ATSC DEBUG] No room for desc length.`);
+                    // No room for desc length (often just padding before CRC)
+                    currentEventOffset = section.length - 4;
                 }
 
                 if (title && startTime > 0) {
