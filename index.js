@@ -176,6 +176,7 @@ const EPG = {
     lastScan: 0,
     isScanning: false,
     isInitialScanDone: false,
+    sourceMap: new Map(), // ATSC: source_id -> program_number (serviceId)
 
     // Helper: Parse DVB BCD and MJD to Timestamp
     parseDVBTime(mjd, bcd) {
@@ -324,29 +325,62 @@ const EPG = {
 
                 const tableId = sectionStart[0];
                 // Support DVB EIT (0x4E-0x6F) and ATSC PSIP Tables (0xC7-0xCF)
-                // 0xC7: MGT, 0xC8: VCT, 0xCB: EIT-0, 0xCC: EIT-1...
-                if ((tableId >= 0x4E && tableId <= 0x6F) || (tableId >= 0xC7 && tableId <= 0xCF)) {
-                    const serviceId = (sectionStart[3] << 8) | sectionStart[4];
-                    this.parseEITSection(sectionStart, serviceId, () => programCount++);
+                // 0xC7: MGT, 0xC8/C9: VCT, 0xCB: EIT-0, 0xCC: EIT-1...
+                if (tableId === 0xC8 || tableId === 0xC9) {
+                    this.parseATSCVCT(sectionStart);
+                } else if ((tableId >= 0x4E && tableId <= 0x6F) || (tableId >= 0xC7 && tableId <= 0xCF)) {
+                    const id = (sectionStart[3] << 8) | sectionStart[4];
+                    this.parseEITSection(sectionStart, id, () => programCount++);
                 }
             }
         }
         return programCount;
     },
 
-    parseEITSection(section, serviceId, onFound) {
+    parseEITSection(section, id, onFound) {
         const tableId = section[0];
         const sectionLength = ((section[1] & 0x0F) << 8) | section[2];
         if (section.length < sectionLength + 3) return;
 
         if (tableId === 0xCB || tableId === 0xCC || tableId === 0xCD || tableId === 0xCE) {
+            // In ATSC EIT, 'id' is SourceId. We need to map it to ServiceId (Program Number).
+            let serviceId = this.sourceMap.get(id) || id.toString();
             this.parseATSCEIT(section, serviceId, onFound);
         } else if (tableId >= 0x4E && tableId <= 0x6F) {
-            this.parseDVBEIT(section, serviceId, onFound);
+            this.parseDVBEIT(section, id, onFound);
         }
     },
 
-    parseATSCEIT(section, sourceId, onFound) {
+    parseATSCVCT(section) {
+        try {
+            const sectionLength = ((section[1] & 0x0F) << 8) | section[2];
+            const numChannels = section[9];
+            let offset = 10;
+
+            for (let i = 0; i < numChannels; i++) {
+                if (offset + 32 > sectionLength + 3) break;
+                // Channel name is 14 bytes (UTF-16)
+                const major = ((section[offset + 14] & 0x0F) << 6) | (section[offset + 15] >> 2);
+                const minor = ((section[offset + 15] & 0x03) << 8) | section[offset + 16];
+                const programNumber = (section[offset + 18] << 8) | section[offset + 19];
+                const sourceId = (section[offset + 22] << 8) | section[offset + 23];
+
+                if (sourceId && programNumber) {
+                    if (!this.sourceMap.has(sourceId)) {
+                        console.log(`[ATSC VCT] Mapped Source ID ${sourceId} -> Program ${programNumber} (${major}.${minor})`);
+                        this.sourceMap.set(sourceId, programNumber.toString());
+                    }
+                }
+
+                const descriptorsLength = ((section[offset + 30] & 0x0F) << 8) | section[offset + 31];
+                offset += 32 + descriptorsLength;
+            }
+        } catch (e) {
+            console.error('[ATSC VCT] Error:', e);
+        }
+    },
+
+    parseATSCEIT(section, serviceId, onFound) {
         try {
             const sectionLength = ((section[1] & 0x0F) << 8) | section[2];
             // ATSC EIT header is 10 bytes (table_id to num_events_in_section)
