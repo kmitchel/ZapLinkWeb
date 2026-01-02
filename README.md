@@ -1,62 +1,85 @@
-# Express M3U Tuner
+# Express M3U Tuner 📺
 
-A simple Node.js Express application to bridge DVB tuners to Jellyfin/Emby via M3U. It utilizes `dvbv5-zap` for tuning and `ffmpeg` for stream cleanup/piping.
+A high-performance ExpressJS server for turning your USB DVB/ATSC tuners into a network-accessible M3U playlist with full XMLTV Electronic Program Guide (EPG) support.
 
-## Prerequisites (Arch Linux)
+## 🚀 Features
 
-Ensure your server has the necessary hardware drivers and utilities installed.
+- **Multi-Tuner Support**: Automatically discovers and manages multiple tuners in `/dev/dvb`.
+- **EPG Engine**: Built-in parser for ATSC (EIT/VCT) and DVB program guides.
+- **Smart Mapping**: Automatically maps ATSC Source IDs to Virtual Channel numbers (e.g., 55.1).
+- **XMLTV Excellence**: Generates standard XMLTV files with local timezone support and proper entity escaping (no more "Rizzoli & Isles" ampersand crashes).
+- **Auto-Disambiguation**: Automatically fixes duplicate channel names in your `channels.conf` by appending subchannel numbers.
+- **Hardware Acceleration**: Support for Intel QSV hardware transcoding to reduce CPU load.
+- **Smart Scanning**: Only runs a full EPG scan on startup if the database is missing; otherwise refreshes every 15 minutes.
+- **Round-Robin Preemption**: Distributes tuner load and supports preemption logic.
+
+## 🛠️ Prerequisites
+
+- **Node.js**: v18 or higher.
+- **dvbv5-zap**: Part of the `v4l-utils` package.
+- **FFmpeg**: For streaming and transcoding.
+- **SQLite3**: For EPG data storage.
 
 ```bash
-sudo pacman -S nodejs npm ffmpeg v4l-utils
+# Ubuntu/Debian
+sudo apt update
+sudo apt install v4l-utils ffmpeg nodejs npm sqlite3
 ```
 
-- **v4l-utils**: Provides `dvbv5-zap` and `dvbv5-scan`.
-- **ffmpeg**: Used for stream container repair and piping.
+## 📦 Installation
 
-## Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/express-m3u-tuner.git
+   cd express-m3u-tuner
+   ```
 
-1.  **Clone and Install**
-    ```bash
-    git clone https://github.com/kmitchel/jellyfin-tuner.git
-    cd jellyfin-tuner
-    npm install
-    ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-2.  **Channel Configuration**
-    Generate a compatible channels file using `dvbv5-scan`. 
-    *Example for US ATSC:*
-    ```bash
-    dvbv5-scan /usr/share/dvb/atsc/us-ATSC-center-frequencies-8VSB -o channels.conf
-    ```
-    Move this file to `/etc/dvb/channels.conf` or set the `CHANNELS_CONF` environment variable.
+3. Place your `channels.conf` in the project root:
+   ```bash
+   # Example generation for ATSC
+   dvbv5-scan us-ATSC-center-frequencies-8VSB > channels.conf
+   ```
 
-3.  **Application Config**
-    Edit `index.js` to match your available Tuners and Channel list. The `name` in the `CHANNELS` array **MUST** match the channel name inside your `channels.conf`.
+## 🚦 Usage
 
-    ```javascript
-    // index.js
-    const CHANNELS = [
-        { number: '1.1', name: 'WXYZ-HD', ... }, 
-        // ...
-    ];
-    ```
+Start the server (usually requires `sudo` or being in the `video` group to access DVB devices):
 
-## Usage
-
-Start the server:
 ```bash
-node index.js
+sudo npm start
 ```
-*Port defaults to 3000.*
 
-### Jellyfin Setup
+### Environment Variables
 
-1.  Go to **Dashboard** -> **Live TV**.
-2.  Add a **Tuner Device** (Select "M3U Tuner").
-3.  **File or URL**: `http://<your-server-ip>:3000/lineup.m3u`
-4.  Save and scan for channels.
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `PORT` | Server port | `3000` |
+| `CHANNELS_CONF` | Path to your channels file | `./channels.conf` |
+| `ENABLE_TRANSCODING`| Toggle FFmpeg transcoding | `true` |
+| `ENABLE_QSV` | Enable Intel QSV Hardware Accel | `false` |
+| `ENABLE_PREEMPTION` | Allow tuners to be stolen | `false` |
+| `VERBOSE_LOGGING` | Enable deep debug logs | `false` |
 
-## Troubleshooting
+## 🔗 Endpoints
 
--   **Logs**: Check the console output for `Zap [Tuner X]` and `FFmpeg [Tuner X]` errors.
--   **Permissions**: Ensure the user running the app is in the `video` group (e.g., `sudo usermod -aG video <user>`).
+- **Lineup**: `http://localhost:3000/lineup.m3u`
+- **EPG**: `http://localhost:3000/xmltv.xml`
+- **Stream**: `http://localhost:3000/stream/:channelNum`
+
+## 🧠 Technical Details
+
+### EPG Storage
+EPG data is stored in `epg.db`. The application enforces a strict uniqueness constraint on `(channel, start_time)` to prevent duplicate entries even when receiving redundant data from multiple muxes.
+
+### ATSC Parsing
+The parser handles Multi-String Structure (MSS) titles and correctly handles GPS-to-Unix epoch conversions, including duration bitmask fixes for North American broadcasts.
+
+### Channel Disambiguation
+If your `channels.conf` has multiple sections named `[Bounce]`, the app will automatically rename them to `[Bounce 55.1]`, `[Bounce 55.2]`, etc., and save the changes back to the file to ensure reliable tuning.
+
+## 📄 License
+ISC
