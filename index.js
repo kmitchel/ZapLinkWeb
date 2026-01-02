@@ -197,7 +197,7 @@ app.get('/stream/:channelNum', async (req, res) => {
     const ffmpegArgs = [];
 
     if (ENABLE_TRANSCODING && ENABLE_QSV) {
-        ffmpegArgs.push('-init_hw_device', 'qsv=hw');
+        ffmpegArgs.push('-init_hw_device', 'qsv=hw', '-filter_hw_device', 'hw');
     }
 
     ffmpegArgs.push(
@@ -212,10 +212,11 @@ app.get('/stream/:channelNum', async (req, res) => {
         if (ENABLE_QSV) {
             // Hardware Transcoding (Intel QSV)
             // 1. Software deinterlace
-            // 2. Ensure NV12 pixel format (required for QSV upload)
-            // 3. Upload to QSV hardware
+            // 2. Ensure NV12 format
+            // 3. Upload to hardware with explicit format=qsv
+            // Note: 'hwupload_qsv' is often missing in some builds, 'hwupload' is more universal
             ffmpegArgs.push(
-                '-vf', 'yadif=0:-1:0,format=nv12,hwupload_qsv',
+                '-vf', 'yadif=0:-1:0,format=nv12,hwupload=extra_hw_frames=64,format=qsv',
                 '-c:v', 'h264_qsv',
                 '-preset', 'veryfast',
                 '-global_quality', '23',
