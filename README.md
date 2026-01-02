@@ -28,24 +28,31 @@ sudo apt install v4l-utils ffmpeg nodejs npm sqlite3
 
 ## 📦 Installation
 
-1. Clone the repository:
+1. Clone the repository into `/opt`:
    ```bash
-   git clone https://github.com/yourusername/express-m3u-tuner.git
-   cd express-m3u-tuner
+   # Replace with your repository URL
+   sudo git clone https://github.com/kmitchel/jellyfin-tuner.git /opt/express-m3u-tuner
+   cd /opt/express-m3u-tuner
    ```
 
-2. Install dependencies:
+2. Set permissions for the `jellyfin` user:
    ```bash
-   npm install
+   sudo chown -R jellyfin:jellyfin /opt/express-m3u-tuner
    ```
 
-3. Place your `channels.conf` in the project root:
+3. Install dependencies:
+   ```bash
+   sudo -u jellyfin npm install
+   ```
+
+4. Place your `channels.conf` in the project root:
    ```bash
    # Example generation for ATSC
    dvbv5-scan us-ATSC-center-frequencies-8VSB > channels.conf
+   sudo chown jellyfin:jellyfin channels.conf
    ```
 
-4. **Channel Icons (Optional)**:
+5. **Channel Icons (Optional)**:
    Create a `logos.json` in the project root to map channel numbers or names to icon URLs:
    ```json
    {
@@ -54,14 +61,38 @@ sudo apt install v4l-utils ffmpeg nodejs npm sqlite3
    }
    ```
    The app will automatically include these in the M3U (`tvg-logo`) and XMLTV (`<icon src="..." />`) outputs.
+   ```bash
+   sudo chown jellyfin:jellyfin logos.json
+   ```
+
+## ⚙️ Systemd Service Setup
+
+Running the application with `sudo` is discouraged. Instead, use the provided systemd unit to run it as the `jellyfin` user.
+
+1. Ensure the `jellyfin` user has access to DVB devices:
+   ```bash
+   sudo usermod -aG video,render jellyfin
+   ```
+
+2. Copy the service file:
+   ```bash
+   sudo cp express-m3u-tuner.service /etc/systemd/system/
+   ```
+
+3. Reload systemd and enable the service:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now express-m3u-tuner
+   ```
+
+4. Check status:
+   ```bash
+   sudo systemctl status express-m3u-tuner
+   ```
 
 ## 🚦 Usage
 
-Start the server (usually requires `sudo` or being in the `video` group to access DVB devices):
-
-```bash
-sudo npm start
-```
+Once the service is running, the server is available on port `3000` (by default) and will automatically restart on failure or reboot.
 
 ### Environment Variables
 

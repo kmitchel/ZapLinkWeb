@@ -1,0 +1,20 @@
+[Unit]
+Description=Express M3U Tuner Service
+After=network.target
+
+[Service]
+Type=simple
+User=jellyfin
+Group=jellyfin
+WorkingDirectory=/opt/express-m3u-tuner
+ExecStart=/usr/bin/node index.js
+Restart=always
+# Environment variables can be added here if needed
+# Environment=PORT=3000
+# Environment=ENABLE_QSV=true
+
+# Ensure the user has access to DVB and GPU hardware
+SupplementaryGroups=video render
+
+[Install]
+WantedBy=multi-user.target
