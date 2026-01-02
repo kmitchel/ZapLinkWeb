@@ -90,9 +90,12 @@ function loadChannels() {
             const freqLine = lines.find(l => l.trim().startsWith('FREQUENCY'));
 
             if (serviceIdLine && vChannelLine) {
-                const serviceId = serviceIdLine.split('=')[1].trim();
+                let serviceId = serviceIdLine.split('=')[1].trim();
                 const vChannel = vChannelLine.split('=')[1].trim();
                 const frequency = freqLine ? freqLine.split('=')[1].trim() : null;
+
+                // Normalize serviceId to decimal string (handles 0x hex if present)
+                serviceId = parseInt(serviceId, serviceId.startsWith('0x') ? 16 : 10).toString();
 
                 CHANNELS.push({
                     number: vChannel,
@@ -103,7 +106,8 @@ function loadChannels() {
             }
         });
 
-        console.log(`Loaded ${CHANNELS.length} channels.`);
+        console.log(`Loaded ${CHANNELS.length} channels:`);
+        CHANNELS.forEach(c => console.log(`  - ${c.name} (Service ID: ${c.serviceId}, Chan: ${c.number})`));
 
         // Sort by channel number
         CHANNELS.sort((a, b) => parseFloat(a.number) - parseFloat(b.number));
