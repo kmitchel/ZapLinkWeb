@@ -900,7 +900,7 @@ app.get('/stream/:channelNum', async (req, res) => {
     // Output format
     ffmpegArgs.push('-f', 'mpegts', 'pipe:1');
 
-    console.log(`Spawning FFmpeg with args: ${ffmpegArgs.join(' ')}`);
+    debugLog(`Spawning FFmpeg with args: ${ffmpegArgs.join(' ')}`);
     const ffmpeg = spawn('ffmpeg', ffmpegArgs);
     tuner.processes.ffmpeg = ffmpeg;
 
@@ -1031,7 +1031,7 @@ app.get('/stream/:channelNum', async (req, res) => {
     });
 
     ffmpeg.on('exit', (code) => {
-        console.log(`FFmpeg exited [Tuner ${tuner.id}] with code ${code}`);
+        debugLog(`FFmpeg exited [Tuner ${tuner.id}] with code ${code}`);
         // If ffmpeg dies, we must kill zap to stop tuning
         cleanup();
     });
