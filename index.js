@@ -284,7 +284,7 @@ const EPG = {
         } catch (e) { return 0; }
     },
 
-    async grab() {
+    async grab(scanTimeout = 15000) {
         if (this.isScanning) return;
 
         // Check if all tuners are free
@@ -320,7 +320,7 @@ const EPG = {
                 console.log(`[EPG] Scanning mux at ${freq} Hz using ${channelName} on Tuner ${tuner.id}...`);
 
                 try {
-                    await this.scanMux(tuner, channelName, freq);
+                    await this.scanMux(tuner, channelName, freq, scanTimeout);
                 } catch (e) {
                     console.error(`[EPG] Error scanning mux at ${freq}:`, e);
                 }
@@ -341,13 +341,13 @@ const EPG = {
         }
     },
 
-    scanMux(tuner, channelName, freq) {
+    scanMux(tuner, channelName, freq, scanTimeout) {
         return new Promise((resolve) => {
             const args = [
                 '-c', CHANNELS_CONF,
                 '-a', tuner.id,
                 '-P', // User requested standalone flag
-                '-t', '15',
+                '-t', Math.ceil(scanTimeout / 1000).toString(),
                 '-o', '-',
                 channelName
             ];
@@ -365,7 +365,7 @@ const EPG = {
                     dataReceived = true;
                 }
                 buffer = Buffer.concat([buffer, data]);
-                if (buffer.length > 15 * 1024 * 1024) { // 15MB limit for full mux scan
+                if (buffer.length > 50 * 1024 * 1024) { // 50MB limit for full mux scan
                     zap.kill('SIGKILL');
                 }
             });
@@ -375,9 +375,9 @@ const EPG = {
             });
 
             const timeout = setTimeout(() => {
-                if (!dataReceived) console.warn(`[EPG] No data received for ${channelName} after 15s. Signal might be weak.`);
+                if (!dataReceived) console.warn(`[EPG] No data received for ${channelName} after ${scanTimeout / 1000}s. Signal might be weak.`);
                 zap.kill('SIGKILL');
-            }, 15000); // 15s per mux
+            }, scanTimeout); // User specified timeout
 
             zap.on('exit', () => {
                 clearTimeout(timeout);
@@ -685,8 +685,8 @@ const EPG = {
     }
 };
 
-// Schedule EPG grab every 15 minutes
-setInterval(() => EPG.grab(), 15 * 60 * 1000);
+// Schedule EPG grab every 15 minutes (Longer scan to get more data)
+setInterval(() => EPG.grab(60000), 15 * 60 * 1000);
 // Priority: Initial grab on startup ONLY if database is missing
 if (!dbExists) {
     console.log('[EPG] epg.db not found. Starting initial full scan...');
