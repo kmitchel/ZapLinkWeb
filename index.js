@@ -289,12 +289,29 @@ async function acquireTuner() {
     return null;
 }
 
+// Setup database tables
+db.serialize(() => {
+    db.run(`CREATE TABLE IF NOT EXISTS programs (
+        frequency TEXT,
+        channel_service_id TEXT,
+        start_time INTEGER,
+        end_time INTEGER,
+        title TEXT,
+        description TEXT,
+        event_id INTEGER,
+        source_id INTEGER,
+        PRIMARY KEY (frequency, channel_service_id, start_time)
+    )`);
+    // Index for faster XMLTV generation
+    db.run(`CREATE INDEX IF NOT EXISTS idx_end_time ON programs(end_time)`);
+});
+
 // EPG Modle
 const EPG = {
     lastScan: 0,
     isScanning: false,
     isInitialScanDone: false,
-    sourceMap: new Map(), // ATSC: source_id -> program_number (serviceId)
+    sourceMap: new Map(), // ATSC Mapping: "freq_sourceId" -> channelNumber (e.g., "500000000_1" -> "15.1")
 
     // Helper: Parse DVB BCD and MJD to Timestamp
     parseDVBTime(mjd, bcd) {
@@ -499,13 +516,16 @@ const EPG = {
         const sectionLength = ((section[1] & 0x0F) << 8) | section[2];
         if (section.length < sectionLength + 3) return;
 
+        const mapKey = `${freq}_${id}`;
+
         if (tableId === 0xCB) {
             // EIT (Event Information Table)
-            let serviceId = this.sourceMap.get(id) || id.toString();
-            this.parseATSCEIT(section, serviceId, onFound, id);
+            let serviceId = this.sourceMap.get(mapKey) || id.toString();
+            this.parseATSCEIT(section, serviceId, onFound, id, freq);
         } else if (tableId === 0xCC) {
             // ETT (Extended Text Table)
-            this.parseATSCEET(section, id);
+            let serviceId = this.sourceMap.get(mapKey) || id.toString();
+            this.parseATSCEET(section, id, serviceId, freq);
         } else if (tableId >= 0x4E && tableId <= 0x6F) {
             this.parseDVBEIT(section, id, onFound);
         }
@@ -524,21 +544,23 @@ const EPG = {
                 const sourceId = (section[offset + 28] << 8) | section[offset + 29];
 
                 if (sourceId) {
+                    const mapKey = `${freq}_${sourceId}`;
                     // Find matching channel in our config (by freq and programNumber)
                     const channel = CHANNELS.find(c => c.frequency == freq && c.serviceId == programNumber.toString());
 
                     if (channel) {
-                        if (this.sourceMap.get(sourceId) !== channel.number) {
-                            debugLog(`[ATSC VCT] Verified Map: Source ${sourceId} -> ${channel.name} (${channel.number})`);
-                            this.sourceMap.set(sourceId, channel.number);
+                        if (this.sourceMap.get(mapKey) !== channel.number) {
+                            debugLog(`[ATSC VCT] Verified Map: ${freq} - Source ${sourceId} -> ${channel.name} (${channel.number})`);
+                            this.sourceMap.set(mapKey, channel.number);
                         }
                     } else {
                         // Fallback: Use major.minor from broadcast if we don't have this channel on this mux
                         const major = ((section[offset + 14] & 0x0F) << 6) | (section[offset + 15] >> 2);
                         const minor = ((section[offset + 15] & 0x03) << 8) | section[offset + 16];
                         const virtualChannel = `${major}.${minor}`;
-                        if (!this.sourceMap.has(sourceId)) {
-                            this.sourceMap.set(sourceId, virtualChannel);
+                        if (!this.sourceMap.has(mapKey)) {
+                            debugLog(`[ATSC VCT] Dynamic Map: ${freq} - Source ${sourceId} -> ${virtualChannel}`);
+                            this.sourceMap.set(mapKey, virtualChannel);
                         }
                     }
                 }
@@ -550,7 +572,7 @@ const EPG = {
         }
     },
 
-    parseATSCEIT(section, virtualChannel, onFound, sourceId) {
+    parseATSCEIT(section, virtualChannel, onFound, sourceId, freq) {
         try {
             const sectionLength = ((section[1] & 0x0F) << 8) | section[2];
             // ATSC EIT header is 10 bytes (table_id to num_events_in_section)
@@ -633,11 +655,11 @@ const EPG = {
 
                 if (title && startTime > 0) {
                     onFound();
-                    db.run(`INSERT INTO programs (channel_service_id, start_time, end_time, title, description, event_id, source_id) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
-                            ON CONFLICT(channel_service_id, start_time) 
+                    db.run(`INSERT INTO programs (frequency, channel_service_id, start_time, end_time, title, description, event_id, source_id) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            ON CONFLICT(frequency, channel_service_id, start_time) 
                             DO UPDATE SET title=excluded.title, end_time=excluded.end_time, event_id=excluded.event_id, source_id=excluded.source_id`,
-                        [virtualChannel, startTime, endTime, title, description, eventId, sourceId]);
+                        [freq, virtualChannel, startTime, endTime, title, description, eventId, sourceId]);
                 } else {
                     debugLog(`[ATSC DEBUG] Skipped: Title="${title}" Start=${startTime}`);
                 }
@@ -649,7 +671,7 @@ const EPG = {
         }
     },
 
-    parseATSCEET(section, sourceId) {
+    parseATSCEET(section, sourceId, virtualChannel, freq) {
         try {
             const sectionLength = ((section[1] & 0x0F) << 8) | section[2];
             if (section.length < 13) return;
@@ -672,9 +694,9 @@ const EPG = {
             }
 
             if (desc) {
-                debugLog(`[ATSC ETT] Decoded Desc for Source ${sourceId} Event ${eventId}: "${desc.substring(0, 40)}..."`);
-                db.run("UPDATE programs SET description = ? WHERE source_id = ? AND event_id = ?",
-                    [desc, sourceId, eventId]);
+                debugLog(`[ATSC ETT] Decoded Desc for Chan ${virtualChannel} Event ${eventId}`);
+                db.run("UPDATE programs SET description = ? WHERE frequency = ? AND channel_service_id = ? AND event_id = ?",
+                    [desc, freq, virtualChannel, eventId]);
             }
         } catch (e) {
             console.error('[ATSC ETT] Error:', e);
@@ -907,6 +929,7 @@ app.get('/stream/:channelNum', async (req, res) => {
         '-err_detect', 'ignore_err',
         '-analyzeduration', '2000000',
         '-probesize', '2000000',
+        '-re',
         '-i', 'pipe:0'
     );
 
