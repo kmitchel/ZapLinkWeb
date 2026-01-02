@@ -102,7 +102,7 @@ function loadChannels() {
                     name: name,
                     serviceId: serviceId,
                     frequency: frequency,
-                    rawConfig: block // Store the full config block for precise tuning
+                    rawConfig: `[${name}]${entry.substring(entry.indexOf(']') + 1)}` // Reconstruct valid config block
                 });
             }
         });
