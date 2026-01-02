@@ -49,6 +49,7 @@ const ENABLE_QSV = process.env.ENABLE_QSV === 'true'; // Default: false
 
 // Dynamic Channel Loader
 let CHANNELS = [];
+let lastTunerIndex = -1; // For Round-Robin selection
 
 
 
@@ -102,14 +103,22 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper: Acquire an available tuner, preempting if necessary
 async function acquireTuner() {
-    // 1. Try to find a free tuner
-    let tuner = TUNERS.find(t => !t.inUse);
-    if (tuner) return tuner;
+    // 1. Try Round-Robin to find a free tuner that wasn't the last one used
+    // This gives recently closed tuners more time to physically settle.
+    for (let i = 0; i < TUNERS.length; i++) {
+        const nextIndex = (lastTunerIndex + 1 + i) % TUNERS.length;
+        const potentialTuner = TUNERS[nextIndex];
+        if (!potentialTuner.inUse) {
+            lastTunerIndex = nextIndex;
+            return potentialTuner;
+        }
+    }
 
-    // 2. If all busy, try to preempt one (LIFO/FIFO policy? Just pick the first for now)
-    // We prefer a tuner that is not 'cleaningUp' (i.e. currently streaming).
+    // 2. If all busy, try to preempt one (preempting the oldest used if possible)
     if (ENABLE_PREEMPTION) {
-        tuner = TUNERS.find(t => !t.cleaningUp);
+        // We pick the oldest one (starting from lastTunerIndex + 1)
+        const preemptIndex = (lastTunerIndex + 1) % TUNERS.length;
+        const tuner = TUNERS[preemptIndex];
 
         if (tuner) {
             console.log(`Preempting Tuner ${tuner.id} for new request...`);
@@ -118,17 +127,25 @@ async function acquireTuner() {
             }
             // Wait for it to become free (max 3s)
             for (let i = 0; i < 15; i++) {
-                if (!tuner.inUse) return tuner;
+                if (!tuner.inUse) {
+                    lastTunerIndex = preemptIndex;
+                    return tuner;
+                }
                 await delay(200);
             }
             console.warn(`Tuner ${tuner.id} failed to release after preemption.`);
         }
     }
 
-    // 3. Last ditch: wait for any tuner
+    // 3. Last ditch: wait for any tuner (still favors RR)
     for (let i = 0; i < 10; i++) {
-        tuner = TUNERS.find(t => !t.inUse);
-        if (tuner) return tuner;
+        for (let j = 0; j < TUNERS.length; j++) {
+            const idx = (lastTunerIndex + 1 + j) % TUNERS.length;
+            if (!TUNERS[idx].inUse) {
+                lastTunerIndex = idx;
+                return TUNERS[idx];
+            }
+        }
         await delay(500);
     }
 
