@@ -279,7 +279,7 @@ const EPG = {
             });
 
             zap.stderr.on('data', (d) => {
-                // console.log(`[EPG Debug] Zap stderr: ${d.toString()}`);
+                console.log(`[EPG Debug] Zap stderr: ${d.toString()}`);
             });
 
             const timeout = setTimeout(() => {
