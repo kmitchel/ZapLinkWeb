@@ -287,7 +287,7 @@ const EPG = {
 
             zap.stdout.on('data', (data) => {
                 if (!dataReceived) {
-                    console.log(`[EPG] Receiving data stream for ${channelName}...`);
+                    // console.log(`[EPG] Receiving data stream for ${channelName}...`);
                     dataReceived = true;
                 }
                 buffer = Buffer.concat([buffer, data]);
@@ -536,11 +536,11 @@ const EPG = {
                 if (title && startTime > 0) {
                     onFound();
                     const serviceId = this.sourceMap.get(sourceId) || sourceId.toString();
-                    // console.log(`[ATSC EPG] INSERTING: "${title}" for Source ID: ${sourceId} -> Service ID: ${serviceId}`);
+                    console.log(`[ATSC EPG] INSERTING: "${title}" for Source ID: ${sourceId} -> Service ID: ${serviceId} (Starts: ${new Date(startTime).toISOString()})`);
                     db.run("INSERT OR IGNORE INTO programs (channel_service_id, start_time, end_time, title, description) VALUES (?, ?, ?, ?, ?)",
                         [serviceId, startTime, endTime, title, description]);
                 } else {
-                    // console.log(`[EPG Verbose] Skipped event. Title: "${title}", Start: ${startTime}`);
+                    if (numEvents < 5) console.log(`[EPG Verbose] Skipped event. Title: "${title}", Start: ${startTime}`);
                 }
 
                 offset = currentEventOffset; // Move to the start of the next event
@@ -642,8 +642,12 @@ app.get('/lineup.m3u', (req, res) => {
 
 // XMLTV Endpoint
 app.get('/xmltv.xml', (req, res) => {
-    db.all("SELECT * FROM programs WHERE end_time > ?", [Date.now()], (err, rows) => {
-        if (err) return res.status(500).send(err.message);
+    db.all("SELECT * FROM programs WHERE end_time > ? ORDER BY channel_service_id, start_time", [Date.now()], (err, rows) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send(err.message);
+        }
+        console.log(`[XMLTV] Serving ${rows.length} programs.`);
 
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
         xml += '<tv>\n';
