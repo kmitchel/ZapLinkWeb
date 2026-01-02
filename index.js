@@ -475,7 +475,7 @@ const EPG = {
                     }
                 }
 
-                const descriptorsLength = ((section[offset + 30] & 0x0F) << 8) | section[offset + 31];
+                const descriptorsLength = ((section[offset + 30] & 0x03) << 8) | section[offset + 31];
                 offset += 32 + descriptorsLength;
             }
             console.log(`[ATSC VCT] Parsed ${numChannels} channels. Source Map size: ${this.sourceMap.size}`);
@@ -497,11 +497,11 @@ const EPG = {
             // section[8] protocol_version
             // section[9] num_events_in_section
             const numEvents = section[9];
-            console.log(`[ATSC DEBUG] Header: SourceID=${sourceId}, NumEvents=${numEvents}, Len=${sectionLength}`);
+            // console.log(`[ATSC DEBUG] Header: SourceID=${sourceId}, NumEvents=${numEvents}, Len=${sectionLength}`);
             let offset = 10; // Start of event loop
 
             if (numEvents > 0) {
-                console.log(`[ATSC EIT] Parsing ${numEvents} events for SourceID ${sourceId} (Table 0x${section[0].toString(16)})`);
+                // console.log(`[ATSC EIT] Parsing ${numEvents} events for SourceID ${sourceId} (Table 0x${section[0].toString(16)})`);
             }
 
             for (let i = 0; i < numEvents; i++) {
@@ -513,10 +513,10 @@ const EPG = {
 
                 const eventId = (section[offset] << 8) | section[offset + 1];
                 const startTimeGPS = section.readUInt32BE(offset + 2);
-                const duration = ((section[offset + 6] & 0x3F) << 16) | (section[offset + 7] << 8) | section[offset + 8];
+                const duration = ((section[offset + 6] & 0x0F) << 16) | (section[offset + 7] << 8) | section[offset + 8];
                 const titleLength = section[offset + 9];
 
-                console.log(`[ATSC DEBUG] Evt ${eventId}: Start=${startTimeGPS} Dur=${duration} TitleLen=${titleLength}`);
+                // console.log(`[ATSC DEBUG] Evt ${eventId}: Start=${startTimeGPS} Dur=${duration} TitleLen=${titleLength}`);
 
                 // GPS Epoch 1980-01-06 00:00:00 UTC. diff 315964800
                 const startTime = (startTimeGPS + 315964800) * 1000;
@@ -529,7 +529,6 @@ const EPG = {
                 // Parse title (Multi-String Structure)
                 if (titleLength > 0 && currentEventOffset + titleLength <= section.length) {
                     let titleBuffer = section.slice(currentEventOffset, currentEventOffset + titleLength);
-                    console.log(`[ATSC DEBUG] Raw Title Bytes: ${titleBuffer.toString('hex')}`);
 
                     if (titleBuffer.length > 0) {
                         const numStrings = titleBuffer[0];
