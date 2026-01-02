@@ -141,6 +141,27 @@ function escapeXml(unsafe) {
     });
 }
 
+// Helper: Format date for XMLTV (Local Time + Offset)
+function formatXmltvDate(ts) {
+    const d = new Date(ts);
+    const pad = (n) => n.toString().padStart(2, '0');
+
+    const Y = d.getFullYear();
+    const M = pad(d.getMonth() + 1);
+    const D = pad(d.getDate());
+    const h = pad(d.getHours());
+    const m = pad(d.getMinutes());
+    const s = pad(d.getSeconds());
+
+    let off = -d.getTimezoneOffset();
+    let sign = off >= 0 ? '+' : '-';
+    off = Math.abs(off);
+    const offH = pad(Math.floor(off / 60));
+    const offM = pad(off % 60);
+
+    return `${Y}${M}${D}${h}${m}${s} ${sign}${offH}${offM}`;
+}
+
 // Helper: Acquire an available tuner, preempting if necessary
 async function acquireTuner() {
     // 1. Try Round-Robin to find a free tuner that wasn't the last one used
@@ -706,8 +727,8 @@ app.get('/xmltv.xml', (req, res) => {
                 return;
             }
 
-            const start = new Date(p.start_time).toISOString().replace(/[-:T]/g, '').split('.')[0] + ' +0000';
-            const end = new Date(p.end_time).toISOString().replace(/[-:T]/g, '').split('.')[0] + ' +0000';
+            const start = formatXmltvDate(p.start_time);
+            const end = formatXmltvDate(p.end_time);
 
             xml += `  <programme start="${start}" stop="${end}" channel="${channel.number}">\n`;
             xml += `    <title lang="en">${escapeXml(p.title)}</title>\n`;
