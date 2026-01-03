@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tuner Dashboard & Player</title>
+    <title>Express Tuner Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -35,16 +35,13 @@
             line-height: 1.5;
         }
 
-        /* Hero Background */
         .hero-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background:
-                radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+            background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.05) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
             z-index: -1;
         }
 
@@ -54,7 +51,9 @@
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
         }
 
         .brand h1 {
@@ -71,22 +70,54 @@
         .brand p {
             margin: 0.5rem 0 0;
             color: var(--text-secondary);
-            font-weight: 400;
             font-size: 1rem;
         }
 
-        .nav-actions {
+        .controls-bar {
+            background: var(--surface-color);
+            padding: 1rem 2rem;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .controls-inner {
+            max-width: 1400px;
+            margin: 0 auto;
             display: flex;
-            gap: 1rem;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        select {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.4rem 1rem;
+            border-radius: 0.5rem;
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 2rem 5rem;
+            padding: 2rem 2rem 5rem;
         }
 
-        /* List Design */
         .channel-list {
             display: flex;
             flex-direction: column;
@@ -102,29 +133,15 @@
             grid-template-columns: 80px 300px 1fr 240px;
             align-items: center;
             gap: 2rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s;
             position: relative;
-            overflow: hidden;
+            cursor: default;
         }
 
         .channel-row:hover {
-            transform: scale(1.005);
             background: var(--surface-hover);
             border-color: var(--accent-color);
-            box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Header Row */
-        .list-header {
-            padding: 0 2rem 1rem;
-            display: grid;
-            grid-template-columns: 80px 300px 1fr 240px;
-            gap: 2rem;
-            color: var(--text-dim);
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            transform: scale(1.005);
         }
 
         .logo-box {
@@ -147,38 +164,15 @@
             object-fit: contain;
         }
 
-        .channel-main .name {
+        .name {
             font-size: 1.25rem;
             font-weight: 600;
             display: block;
         }
 
-        .channel-main .number {
+        .number {
             font-size: 0.875rem;
             color: var(--text-dim);
-            font-weight: 500;
-        }
-
-        .program-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .program-title {
-            font-weight: 500;
-            font-size: 1.125rem;
-            color: var(--text-primary);
-        }
-
-        .program-meta {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
         }
 
         .progress-track {
@@ -196,18 +190,10 @@
             top: 0;
             height: 100%;
             background: var(--accent-color);
-            border-radius: 2px;
             box-shadow: 0 0 12px var(--accent-glow);
             transition: width 1s linear;
         }
 
-        .row-actions {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: flex-end;
-        }
-
-        /* Buttons */
         .btn {
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
@@ -220,16 +206,12 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            justify-content: center;
         }
 
         .btn-play {
             background: var(--accent-color);
             color: #000;
-        }
-
-        .btn-play:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px -6px var(--accent-glow);
         }
 
         .btn-outline {
@@ -240,10 +222,8 @@
 
         .btn-outline:hover {
             background: rgba(255, 255, 255, 0.05);
-            border-color: var(--text-secondary);
         }
 
-        /* Player Overlay */
         #player-overlay {
             position: fixed;
             top: 0;
@@ -254,22 +234,8 @@
             z-index: 2000;
             display: none;
             flex-direction: column;
-            justify-content: center;
-            /* Center player vertically */
             padding: 2rem;
-            animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            justify-content: center;
         }
 
         .player-content {
@@ -280,27 +246,19 @@
             max-width: 1400px;
             width: 100%;
             margin: 0 auto;
+            height: 100%;
         }
 
-        .player-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .player-video-box {
+        .video-box {
             flex: 1;
             background: #000;
             border-radius: 2rem;
             overflow: hidden;
-            border: 1px solid var(--border-color);
-            position: relative;
-            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
             max-height: 70vh;
-            /* Ensure it stays within viewport height */
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
         }
 
         video {
@@ -309,25 +267,7 @@
             object-fit: contain;
         }
 
-        .player-info {
-            padding: 0 1rem;
-        }
-
-        .player-info h2 {
-            font-size: 2rem;
-            margin: 0;
-            font-weight: 700;
-        }
-
-        .player-info p {
-            color: var(--text-secondary);
-            font-size: 1.125rem;
-            max-width: 800px;
-            margin: 1rem 0 0;
-        }
-
         .close-player {
-            font-size: 1.5rem;
             background: var(--surface-color);
             width: 50px;
             height: 50px;
@@ -336,61 +276,34 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
             border: 1px solid var(--border-color);
-        }
-
-        .close-player:hover {
-            background: #ef4444;
-            color: white;
-            border-color: transparent;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 10rem 0;
-            color: var(--text-dim);
-            font-size: 1.25rem;
+            font-size: 1.5rem;
         }
 
         @media (max-width: 1100px) {
-
-            .channel-row,
-            .list-header {
+            .channel-row {
                 grid-template-columns: 80px 1fr 200px;
             }
 
-            .list-header div:nth-child(3),
             .channel-row .program-info {
                 display: none;
             }
         }
 
         @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 2rem;
-            }
-
             .channel-row {
                 grid-template-columns: 60px 1fr;
                 padding: 1rem;
-                gap: 1rem;
             }
 
-            .list-header,
             .row-actions {
                 display: none;
             }
 
-            .channel-row:after {
-                content: '▶';
-                position: absolute;
-                right: 1.5rem;
-                top: 50%;
-                transform: translateY(-50%);
-                color: var(--accent-color);
+            .controls-inner {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
             }
         }
     </style>
@@ -398,197 +311,139 @@
 
 <body>
     <div class="hero-bg"></div>
-
     <header>
         <div class="brand">
             <h1>Express Tuner</h1>
-            <p>Live TV Broadcast Gateway</p>
+            <p>Direct Tuner Access & Dynamic Transcoding</p>
         </div>
-        <div class="nav-actions">
-            <a href="/playlist.m3u" class="btn btn-outline">M3U List</a>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="/playlist.m3u" class="btn btn-outline" id="m3u-link">M3U List</a>
             <a href="/xmltv.xml" class="btn btn-outline">XMLTV Guide</a>
         </div>
     </header>
 
-    <div class="container">
-        <div id="loader" class="empty-state">Initializing signal access...</div>
-
-        <div id="list-container" style="display: none;">
-            <div class="list-header">
-                <div></div>
-                <div>Channel</div>
-                <div>Now Playing</div>
-                <div style="text-align: right;">Stream</div>
+    <div class="controls-bar">
+        <div class="controls-inner">
+            <div class="control-group">
+                <span>Output Format:</span>
+                <select id="format-select" onchange="updateLinks()">
+                    <option value="ts">MPEG-TS (.ts)</option>
+                    <option value="mkv">Matroska (.mkv)</option>
+                    <option value="mp4">Fragmented MP4 (.mp4)</option>
+                </select>
             </div>
-            <div id="channel-list" class="channel-list"></div>
+            <div class="control-group">
+                <span>Video Codec:</span>
+                <select id="codec-select" onchange="updateLinks()">
+                    <option value="h264">H.264 (Broad Compatibility)</option>
+                    <option value="h265">H.265 (High Efficiency)</option>
+                    <option value="av1">AV1 (Next-Gen)</option>
+                    <option value="copy">Strict Copy (No Transcode)</option>
+                </select>
+            </div>
         </div>
     </div>
 
-    <!-- Player Overlay -->
+    <div class="container">
+        <div id="loader" style="text-align: center; padding: 10rem;">Connecting...</div>
+        <div id="channel-list" class="channel-list"></div>
+    </div>
+
     <div id="player-overlay">
         <div class="player-content">
-            <div class="player-top">
-                <div class="player-info">
-                    <h2 id="video-title">Channel Name</h2>
-                    <p id="video-desc">Program Description</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 id="v-title" style="margin:0"></h2>
+                    <p id="v-desc" style="margin:0.5rem 0 0; color: var(--text-secondary)"></p>
                 </div>
                 <div class="close-player" onclick="closePlayer()">✕</div>
             </div>
-            <div class="player-video-box">
-                <video id="videoElement" controls></video>
-            </div>
+            <div class="video-box"><video id="videoElement" controls></video></div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.min.js"></script>
     <script>
-        let mpegTsPlayer = null;
+        let tsPlayer = null;
+        let channelsData = [];
 
-        async function refreshData() {
+        async function load() {
             try {
-                const response = await fetch('/api/now-playing');
-                const data = await response.json();
-                renderList(data.channels);
-            } catch (error) {
-                console.error('Failed to fetch:', error);
-                document.getElementById('loader').textContent = 'Connection lost. Retrying...';
-            }
+                const r = await fetch('/api/now-playing');
+                const d = await r.json();
+                channelsData = d.channels;
+                updateLinks();
+            } catch (e) { document.getElementById('loader').textContent = 'Error loading tuner.'; }
         }
 
-        function renderList(channels) {
-            const list = document.getElementById('channel-list');
-            const container = document.getElementById('list-container');
+        function updateLinks() {
+            const format = document.getElementById('format-select').value;
+            const codec = document.getElementById('codec-select').value;
             const loader = document.getElementById('loader');
+            const list = document.getElementById('channel-list');
 
-            if (channels.length === 0) {
-                loader.textContent = 'No signal maps found.';
-                return;
-            }
+            // Build query
+            const q = `?f=${format}&c=${codec}`;
+            document.getElementById('m3u-link').href = `/playlist.m3u${q}`;
 
             loader.style.display = 'none';
-            container.style.display = 'block';
             list.innerHTML = '';
 
-            channels.forEach(channel => {
-                const now = channel.now_playing;
+            channelsData.forEach(c => {
+                const now = c.now_playing;
                 const row = document.createElement('div');
                 row.className = 'channel-row';
-                row.onclick = (e) => {
-                    if (window.innerWidth <= 768) {
-                        launchPlayer(channel);
-                    }
-                };
-
                 row.innerHTML = `
-                    <div class="logo-box">
-                        ${channel.icon ? `<img src="${channel.icon}" alt="">` : channel.name.charAt(0)}
-                    </div>
-                    <div class="channel-main">
-                        <span class="name">${channel.name}</span>
-                        <span class="number">VC ${channel.number}</span>
-                    </div>
+                    <div class="logo-box">${c.icon ? `<img src="${c.icon}">` : c.name.charAt(0)}</div>
+                    <div><span class="name">${c.name}</span><span class="number">VC ${c.number}</span></div>
                     <div class="program-info">
-                        <div class="program-title">${now ? now.title : 'No Data'}</div>
-                        <div class="program-meta">${now ? (now.description || 'Live Broadcast') : 'Awaiting EPG scan...'}</div>
-                        ${now ? `
-                            <div class="progress-track">
-                                <div class="progress-fill" style="width: ${now.progress}%"></div>
-                            </div>
-                        ` : ''}
+                        <div style="font-weight:500">${now ? now.title : 'Live'}</div>
+                        <div style="font-size:0.875rem; color:var(--text-secondary); display:-webkit-box; -webkit-line-clamp:1; line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;">${now ? (now.description || 'No description') : 'Signal Active'}</div>
+                        ${now ? `<div class="progress-track"><div class="progress-fill" style="width:${now.progress}%"></div></div>` : ''}
                     </div>
-                    <div class="row-actions">
-                        <button class="btn btn-outline" onclick="copyStream('${window.location.origin}/stream/${channel.number}', event)">Copy URL</button>
-                        <button class="btn btn-play" onclick="launchPlayer(${JSON.stringify(channel).replace(/"/g, '&quot;')}, event)">Watch</button>
-                    </div>
-                `;
+                    <div style="display:flex; gap:0.5rem; justify-content:flex-end">
+                        <button class="btn btn-outline" onclick="copy('/stream/${c.number}${q}', event)">URL</button>
+                        <button class="btn btn-play" onclick="play('${c.number}', '${format}', '${codec}', '${c.name}', '${now ? now.title : 'Live'}', '${now ? now.description : ''}')">Watch</button>
+                    </div>`;
                 list.appendChild(row);
             });
         }
 
-        function launchPlayer(channel, event) {
-            if (event) event.stopPropagation();
-
-            const streamUrl = `/stream/${channel.number}`;
-            const videoElement = document.getElementById('videoElement');
-            const now = channel.now_playing;
-
-            document.getElementById('video-title').textContent = `${channel.number} ${channel.name}`;
-            document.getElementById('video-desc').textContent = now ? (now.title + ': ' + (now.description || '')) : 'Live streaming direct from tuner.';
-
+        function play(num, f, c, name, title, desc) {
+            const url = `/stream/${num}/${f}/${c}`;
+            const video = document.getElementById('videoElement');
+            document.getElementById('v-title').textContent = `${num} ${name} - ${title}`;
+            document.getElementById('v-desc').textContent = desc || 'Direct tuner stream.';
             document.getElementById('player-overlay').style.display = 'flex';
             document.body.style.overflow = 'hidden';
 
-            if (mpegts.getFeatureList().mseLivePlayback) {
-                mpegTsPlayer = mpegts.createPlayer({
-                    type: 'mse',
-                    isLive: true,
-                    url: streamUrl
-                });
-                mpegTsPlayer.attachMediaElement(videoElement);
-                mpegTsPlayer.load();
-                mpegTsPlayer.play();
+            if (f === 'ts' && mpegts.getFeatureList().mseLivePlayback) {
+                tsPlayer = mpegts.createPlayer({ type: 'mse', isLive: true, url: url });
+                tsPlayer.attachMediaElement(video);
+                tsPlayer.load(); tsPlayer.play();
             } else {
-                videoElement.src = streamUrl;
-                videoElement.play();
+                video.src = url;
+                video.play();
             }
         }
 
         function closePlayer() {
-            if (mpegTsPlayer) {
-                mpegTsPlayer.pause();
-                mpegTsPlayer.unload();
-                mpegTsPlayer.detachMediaElement();
-                mpegTsPlayer.destroy();
-                mpegTsPlayer = null;
-            }
+            if (tsPlayer) { tsPlayer.pause(); tsPlayer.unload(); tsPlayer.destroy(); tsPlayer = null; }
             document.getElementById('player-overlay').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
 
-        function copyStream(url, event) {
-            if (event) event.stopPropagation();
-            const btn = event.currentTarget;
-            const originalText = btn.textContent;
-
-            const updateBtn = () => {
-                btn.textContent = 'Copied!';
-                btn.style.borderColor = 'var(--accent-color)';
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.style.borderColor = '';
-                }, 2000);
-            };
-
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(url).then(updateBtn).catch(err => {
-                    console.error('Clipboard error:', err);
-                    fallbackCopy(url, updateBtn);
-                });
-            } else {
-                fallbackCopy(url, updateBtn);
-            }
+        function copy(path, e) {
+            const url = window.location.origin + path;
+            const btn = e.target;
+            navigator.clipboard.writeText(url).then(() => {
+                const old = btn.textContent; btn.textContent = 'OK!';
+                setTimeout(() => btn.textContent = old, 1500);
+            });
         }
 
-        function fallbackCopy(text, callback) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.position = "fixed";
-            textArea.style.left = "-9999px";
-            textArea.style.top = "0";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                callback();
-            } catch (err) {
-                console.error('Fallback copy failed:', err);
-            }
-            document.body.removeChild(textArea);
-        }
-
-        refreshData();
-        setInterval(refreshData, 30000);
+        load();
+        setInterval(load, 30000);
     </script>
 </body>
 
