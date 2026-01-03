@@ -444,6 +444,9 @@
                 document.getElementById('player-overlay').style.display = 'flex';
                 document.body.style.overflow = 'hidden';
 
+                // Add history state so back button works
+                history.pushState({ playerOpen: true }, '', '#player');
+
                 if (f === 'ts' && window.mpegts && mpegts.getFeatureList().mseLivePlayback) {
                     tsPlayer = mpegts.createPlayer({ type: 'mse', isLive: true, url: url });
                     tsPlayer.attachMediaElement(video);
@@ -459,7 +462,7 @@
             }
         }
 
-        function closePlayer() {
+        function closePlayer(isPopState = false) {
             const video = document.getElementById('videoElement');
             if (tsPlayer) {
                 tsPlayer.pause();
@@ -476,7 +479,19 @@
 
             document.getElementById('player-overlay').style.display = 'none';
             document.body.style.overflow = 'auto';
+
+            // If we closed manually (not via back button), remove the hash
+            if (!isPopState && window.location.hash === '#player') {
+                history.back();
+            }
         }
+
+        // Handle Browser Back Button
+        window.addEventListener('popstate', (e) => {
+            if (document.getElementById('player-overlay').style.display === 'flex') {
+                closePlayer(true);
+            }
+        });
 
         // Close on Escape key
         window.addEventListener('keydown', (e) => {
