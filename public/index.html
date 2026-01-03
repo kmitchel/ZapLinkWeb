@@ -582,27 +582,43 @@
             });
         }
 
+        let clickTimer = null;
         function showDetails(chanNum, chanName, program) {
-            document.getElementById('det-title').textContent = program.title;
-            document.getElementById('det-time').textContent = `${new Date(program.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(program.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
-            document.getElementById('det-desc').textContent = program.description || 'No description available.';
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+                clickTimer = null;
+                return;
+            }
 
-            const panel = document.getElementById('details-panel');
-            panel.style.display = 'block';
+            clickTimer = setTimeout(() => {
+                document.getElementById('det-title').textContent = program.title;
+                document.getElementById('det-time').textContent = `${new Date(program.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(program.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+                document.getElementById('det-desc').textContent = program.description || 'No description available.';
 
-            const format = document.getElementById('format-select').value;
-            const codec = document.getElementById('codec-select').value;
-            const q = `?f=${format}&c=${codec}`;
+                const panel = document.getElementById('details-panel');
+                panel.style.display = 'block';
 
-            document.getElementById('watch-now-btn').onclick = () => play(chanNum, format, codec, chanName, program.title);
-            document.getElementById('copy-url-btn').onclick = (e) => copy(`/stream/${chanNum}${q}`, e);
+                const format = document.getElementById('format-select').value;
+                const codec = document.getElementById('codec-select').value;
+                const q = `?f=${format}&c=${codec}`;
+
+                document.getElementById('watch-now-btn').onclick = () => play(chanNum, format, codec, chanName, program.title);
+                document.getElementById('copy-url-btn').onclick = (e) => copy(`/stream/${chanNum}${q}`, e);
+
+                clickTimer = null;
+            }, 250);
         }
 
         function closeDetails() {
+            if (clickTimer) clearTimeout(clickTimer);
             document.getElementById('details-panel').style.display = 'none';
         }
 
         function play(num, f, c, name, title) {
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+                clickTimer = null;
+            }
             const url = `/stream/${encodeURIComponent(num)}/${f}/${c}`;
             const video = document.getElementById('videoElement');
             document.getElementById('v-title').textContent = `${num} ${name} - ${title}`;
