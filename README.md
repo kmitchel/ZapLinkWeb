@@ -104,7 +104,13 @@ Group=jellyfin
 WorkingDirectory=/opt/jellyfin-tuner
 ExecStart=/usr/bin/node index.js
 Restart=always
+
+# Hardware Acceleration and Transcoding
+# Priority: NVENC > QSV > Software > Copy
+Environment=ENABLE_QSV=true
+Environment=ENABLE_NVENC=false
 Environment=ENABLE_TRANSCODING=false
+Environment=ENABLE_EPG=true
 
 # Access to DVB and GPU hardware
 SupplementaryGroups=video render

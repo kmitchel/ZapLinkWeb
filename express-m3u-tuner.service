@@ -9,12 +9,15 @@ Group=jellyfin
 WorkingDirectory=/opt/jellyfin-tuner
 ExecStart=/usr/bin/node index.js
 Restart=always
-# Environment variables can be added here if needed
-Environment=ENABLE_TRANSCODING=false
-# Environment=PORT=3000
-# Environment=ENABLE_QSV=true
 
-# Ensure the user has access to DVB and GPU hardware
+# Hardware Acceleration and Transcoding
+# Priority: NVENC > QSV > Software > Copy
+Environment=ENABLE_QSV=true
+Environment=ENABLE_NVENC=false
+Environment=ENABLE_TRANSCODING=false
+Environment=ENABLE_EPG=true
+
+# Supplementary groups for DVB and GPU access
 SupplementaryGroups=video render
 
 [Install]
