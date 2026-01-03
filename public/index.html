@@ -315,22 +315,27 @@
         }
 
         .close-player {
-            background: var(--surface-color);
-            width: 44px;
-            height: 44px;
-            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            border: 1px solid var(--border-color);
-            font-size: 1.25rem;
-            transition: 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 1.5rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #fff;
+            backdrop-filter: blur(4px);
         }
 
         .close-player:hover {
             background: #ef4444;
+            border-color: #ef4444;
             color: #fff;
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
         }
 
         @keyframes fadeIn {
