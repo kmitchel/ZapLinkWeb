@@ -389,7 +389,7 @@
             loader.style.display = 'none';
             list.innerHTML = '';
 
-            channelsData.forEach(c => {
+            channelsData.forEach((c, index) => {
                 const now = c.now_playing;
                 const row = document.createElement('div');
                 row.className = 'channel-row';
@@ -403,16 +403,24 @@
                     </div>
                     <div style="display:flex; gap:0.5rem; justify-content:flex-end">
                         <button class="btn btn-outline" onclick="copy('/stream/${c.number}${q}', event)">URL</button>
-                        <button class="btn btn-play" onclick="play('${c.number}', '${format}', '${codec}', '${c.name}', '${now ? now.title : 'Live'}', '${now ? now.description : ''}')">Watch</button>
+                        <button class="btn btn-play" onclick="playByIndex(${index})">Watch</button>
                     </div>`;
                 list.appendChild(row);
             });
         }
 
+        function playByIndex(index) {
+            const c = channelsData[index];
+            const format = document.getElementById('format-select').value;
+            const codec = document.getElementById('codec-select').value;
+            const now = c.now_playing;
+            play(c.number, format, codec, c.name, now ? now.title : 'Live', now ? now.description : '');
+        }
+
         function play(num, f, c, name, title, desc) {
             const url = `/stream/${num}/${f}/${c}`;
             const video = document.getElementById('videoElement');
-            document.getElementById('v-title').textContent = `${num} ${name} - ${title}`;
+            document.getElementById('v-title').textContent = `${num} ${name} ${title ? '- ' + title : ''}`;
             document.getElementById('v-desc').textContent = desc || 'Direct tuner stream.';
             document.getElementById('player-overlay').style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -454,12 +462,46 @@
         });
 
         function copy(path, e) {
+            if (e) e.stopPropagation();
             const url = window.location.origin + path;
-            const btn = e.target;
-            navigator.clipboard.writeText(url).then(() => {
-                const old = btn.textContent; btn.textContent = 'OK!';
-                setTimeout(() => btn.textContent = old, 1500);
-            });
+            const btn = e.currentTarget;
+            const originalText = btn.textContent;
+
+            const updateBtn = () => {
+                btn.textContent = 'OK!';
+                btn.style.borderColor = 'var(--accent-color)';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.borderColor = '';
+                }, 1500);
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(updateBtn).catch(err => {
+                    console.error('Clipboard error:', err);
+                    fallbackCopy(url, updateBtn);
+                });
+            } else {
+                fallbackCopy(url, updateBtn);
+            }
+        }
+
+        function fallbackCopy(text, callback) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                callback();
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+            }
+            document.body.removeChild(textArea);
         }
 
         load();
