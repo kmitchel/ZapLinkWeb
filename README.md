@@ -136,6 +136,7 @@ Once the service is active, the server is available on port `3000` (default). It
 | `CHANNELS_CONF` | Path to your channels file | `./channels.conf` |
 | `ENABLE_TRANSCODING`| Toggle FFmpeg transcoding | `false` |
 | `ENABLE_QSV` | Enable Intel QSV Hardware Accel | `false` |
+| `ENABLE_NVENC` | Enable NVIDIA NVENC Hardware Accel | `false` |
 | `ENABLE_PREEMPTION` | Allow tuners to be stolen | `false` |
 | `ENABLE_EPG` | Enable EPG scanning | `true` |
 | `VERBOSE_LOGGING` | Enable deep debug logs | `false` |
@@ -198,6 +199,43 @@ docker run -d \
   --device /dev/dri:/dev/dri \
   -e ENABLE_TRANSCODING=true \
   -e ENABLE_QSV=true \
+  -v $(pwd)/channels.conf:/app/channels.conf \
+  -v $(pwd)/logos.json:/app/logos.json \
+  -v $(pwd)/epg.db:/app/epg.db \
+  -v /dev/dvb:/dev/dvb \
+  express-m3u-tuner
+```
+
+### 🎮 Hardware Acceleration (NVIDIA NVENC)
+
+To enable NVIDIA NVENC inside Docker, you need the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed.
+
+#### 1. Update `docker-compose.yml`
+```yaml
+services:
+  tuner:
+    # ... other config ...
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - ENABLE_TRANSCODING=true
+      - ENABLE_NVENC=true
+```
+
+#### 2. Manual Docker Run with NVIDIA GPU
+```bash
+docker run -d \
+  --name express-m3u-tuner \
+  --privileged \
+  --network host \
+  --gpus all \
+  -e ENABLE_TRANSCODING=true \
+  -e ENABLE_NVENC=true \
   -v $(pwd)/channels.conf:/app/channels.conf \
   -v $(pwd)/logos.json:/app/logos.json \
   -v $(pwd)/epg.db:/app/epg.db \
