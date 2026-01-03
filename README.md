@@ -290,9 +290,6 @@ If you update your `channels.conf` or notice your guide is stale/incorrect in Je
 4. **Refresh Guide Data**:
    In the Jellyfin Dashboard, go to **Live TV** and click **Refresh Guide Data**.
 
-### ⚠️ Known Issues
-
-- **[SOLVED] EPG Virtual Channel Mismatch**: Previously, EPG data could occasionally display on the wrong subchannel. This was resolved by switching to virtual channel numbers for disambiguation and tuning, ensuring EPG data is correctly mapped and retrieved based on reliable channel identifiers.
 
 ## 📄 License
 ISC
