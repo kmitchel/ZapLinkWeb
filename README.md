@@ -134,9 +134,9 @@ Once the service is active, the server is available on port `3000` (default). It
 | :--- | :--- | :--- |
 | `PORT` | Server port | `3000` |
 | `CHANNELS_CONF` | Path to your channels file | `./channels.conf` |
-| `ENABLE_TRANSCODING`| Toggle FFmpeg transcoding | `false` |
-| `ENABLE_QSV` | Enable Intel QSV Hardware Accel | `false` |
-| `ENABLE_NVENC` | Enable NVIDIA NVENC Hardware Accel | `false` |
+| `ENABLE_NVENC` | Enable NVIDIA NVENC (Priority 1) | `false` |
+| `ENABLE_QSV` | Enable Intel QSV (Priority 2) | `false` |
+| `ENABLE_TRANSCODING`| Enable Software Transcoding (Priority 3)| `false` |
 | `ENABLE_PREEMPTION` | Allow tuners to be stolen | `false` |
 | `ENABLE_EPG` | Enable EPG scanning | `true` |
 | `VERBOSE_LOGGING` | Enable deep debug logs | `false` |
@@ -186,7 +186,6 @@ services:
       - /dev/dvb:/dev/dvb
       - /dev/dri:/dev/dri # Pass through the Intel GPU
     environment:
-      - ENABLE_TRANSCODING=true
       - ENABLE_QSV=true
 ```
 
@@ -197,7 +196,6 @@ docker run -d \
   --privileged \
   --network host \
   --device /dev/dri:/dev/dri \
-  -e ENABLE_TRANSCODING=true \
   -e ENABLE_QSV=true \
   -v $(pwd)/channels.conf:/app/channels.conf \
   -v $(pwd)/logos.json:/app/logos.json \
@@ -223,7 +221,6 @@ services:
               count: 1
               capabilities: [gpu]
     environment:
-      - ENABLE_TRANSCODING=true
       - ENABLE_NVENC=true
 ```
 
@@ -234,7 +231,6 @@ docker run -d \
   --privileged \
   --network host \
   --gpus all \
-  -e ENABLE_TRANSCODING=true \
   -e ENABLE_NVENC=true \
   -v $(pwd)/channels.conf:/app/channels.conf \
   -v $(pwd)/logos.json:/app/logos.json \
