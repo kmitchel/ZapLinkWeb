@@ -33,7 +33,7 @@ COPY . .
 # Default environment variables
 ENV PORT=3000
 ENV CHANNELS_CONF=/app/channels.conf
-ENV ENABLE_TRANSCODING=false
+ENV ENABLE_SOFT=false
 ENV ENABLE_QSV=false
 ENV ENABLE_PREEMPTION=false
 ENV VERBOSE_LOGGING=false

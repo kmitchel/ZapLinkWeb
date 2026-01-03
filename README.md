@@ -115,10 +115,10 @@ ExecStart=/usr/bin/node index.js
 Restart=always
 
 # Hardware Acceleration and Transcoding
-# Priority: NVENC > QSV > Software > Copy
+# Priority: NVENC > Software > QSV > Copy
 Environment=ENABLE_QSV=true
 Environment=ENABLE_NVENC=false
-Environment=ENABLE_TRANSCODING=false
+Environment=ENABLE_SOFT=false
 Environment=ENABLE_EPG=true
 
 # Access to DVB and GPU hardware
@@ -150,8 +150,8 @@ Once the service is active, the server is available on port `3000` (default). It
 | `PORT` | Server port | `3000` |
 | `CHANNELS_CONF` | Path to your channels file | `./channels.conf` |
 | `ENABLE_NVENC` | Enable NVIDIA NVENC (Priority 1) | `false` |
-| `ENABLE_QSV` | Enable Intel QSV (Priority 2) | `true` |
-| `ENABLE_TRANSCODING`| Enable Software Transcoding (Priority 3)| `false` |
+| `ENABLE_SOFT` | Enable Software Transcoding (Priority 2)| `false` |
+| `ENABLE_QSV` | Enable Intel QSV (Priority 3) | `true` |
 | `ENABLE_PREEMPTION` | Allow tuners to be stolen | `false` |
 | `ENABLE_EPG` | Enable EPG scanning | `true` |
 | `VERBOSE_LOGGING` | Enable deep debug logs | `false` |

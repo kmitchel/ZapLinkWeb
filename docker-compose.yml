@@ -19,7 +19,7 @@ services:
       # - /dev/dri:/dev/dri
     environment:
       - PORT=3000
-      - ENABLE_TRANSCODING=false
+      - ENABLE_SOFT=false
       - ENABLE_QSV=false
       - ENABLE_PREEMPTION=false
       - VERBOSE_LOGGING=false
