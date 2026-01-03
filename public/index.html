@@ -718,17 +718,20 @@
             data.forEach(rec => {
                 const card = document.createElement('div');
                 card.className = 'list-card';
+                const isActive = rec.status === 'recording';
                 card.innerHTML = `
                     <div class="list-info">
                         <h3>${rec.title}</h3>
                         <div class="list-meta">
                             <span>${rec.channel_name}</span>
                             <span>${new Date(rec.start_time).toLocaleString()}</span>
-                            ${rec.status === 'recording' ? '<span class="badge badge-recording">Recording</span>' : ''}
+                            ${isActive ? '<span class="badge badge-recording">Recording In Progress</span>' : ''}
                         </div>
                     </div>
                     <div style="display:flex; gap:1rem;">
-                        <button class="btn btn-play" onclick="playFile('/recordings/${rec.file_path.split(/[\\/]/).pop()}', '${rec.title}')">Play</button>
+                        <button class="btn btn-play" onclick="playFile('/recordings/${rec.file_path.split(/[\\/]/).pop()}', '${rec.title}', ${isActive})">
+                            ${isActive ? 'Watch from Start' : 'Play'}
+                        </button>
                         <button class="btn btn-outline btn-danger" onclick="deleteRec(${rec.id})">Delete</button>
                     </div>
                 `;
@@ -744,19 +747,52 @@
             data.forEach(t => {
                 const card = document.createElement('div');
                 card.className = 'list-card';
+                const isOver = t.end_time && Date.now() > t.end_time;
+                const isCompleted = t.last_status === 'completed';
                 card.innerHTML = `
                     <div class="list-info">
                         <h3>${t.title}</h3>
                         <div class="list-meta">
                             <span class="badge badge-timer">${t.type}</span>
                             <span>${t.channel_num ? 'Channel ' + t.channel_num : 'Any Channel'}</span>
-                            ${t.start_time ? `<span>Starts: ${new Date(t.start_time).toLocaleString()}</span>` : ''}
+                            ${t.start_time ? `<span>Time: ${new Date(t.start_time).toLocaleString()}</span>` : ''}
+                            ${isCompleted ? '<span class="badge" style="background:rgba(34,197,94,0.1); color:#22c55e;">Completed</span>' : ''}
+                            ${(isOver && !isCompleted) ? '<span class="badge" style="background:rgba(239,68,68,0.1); color:#ef4444;">Expired</span>' : ''}
                         </div>
                     </div>
-                    <button class="btn btn-outline btn-danger" onclick="deleteTimer(${t.id})">Cancel</button>
+                    <div style="display:flex; gap:1rem;">
+                        ${(isOver || isCompleted) ? `<button class="btn btn-play" onclick="findAndScheduleNext('${t.title.replace(/'/g, "\\'")}', '${t.channel_num}')">Record Next</button>` : ''}
+                        <button class="btn btn-outline btn-danger" onclick="deleteTimer(${t.id})">${(isOver || isCompleted) ? 'Clear' : 'Cancel'}</button>
+                    </div>
                 `;
                 list.appendChild(card);
             });
+        }
+
+        async function findAndScheduleNext(title, channelNum) {
+            if (!guideData.length) {
+                const r = await fetch('/api/guide');
+                const d = await r.json();
+                guideData = d.channels;
+            }
+            let nextOccur = null;
+            const now = Date.now();
+            for (const chan of guideData) {
+                if (channelNum && channelNum !== 'null' && chan.number !== channelNum) continue;
+                for (const p of chan.programs) {
+                    if (p.title === title && p.start > now) {
+                        if (!nextOccur || p.start < nextOccur.start) {
+                            nextOccur = { ...p, chanNum: chan.number };
+                        }
+                    }
+                }
+            }
+            if (nextOccur) {
+                schedule('once', nextOccur.title, nextOccur.chanNum, nextOccur.start, nextOccur.end);
+                alert(`Next occurrence found on ${nextOccur.chanNum} at ${new Date(nextOccur.start).toLocaleString()}!`);
+            } else {
+                alert('No future occurrences found in the current guide for "' + title + '".');
+            }
         }
 
         async function deleteRec(id) { if (confirm('Delete this recording?')) { await fetch('/api/recordings/' + id, { method: 'DELETE' }); loadRecordings(); } }
