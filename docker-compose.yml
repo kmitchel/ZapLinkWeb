@@ -20,6 +20,7 @@ services:
     environment:
       - PORT=3000
       - TRANSCODE_MODE=none
+      - TRANSCODE_CODEC=h264
       - ENABLE_PREEMPTION=false
       - VERBOSE_LOGGING=false
     # Run as root inside container or map user ID if needed

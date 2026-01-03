@@ -12,6 +12,7 @@ Restart=always
 
 # Transcoding mode: none (direct copy), soft, qsv, nvenc, vaapi
 Environment=TRANSCODE_MODE=none
+Environment=TRANSCODE_CODEC=h264
 Environment=ENABLE_EPG=true
 
 # Supplementary groups for DVB and GPU access
