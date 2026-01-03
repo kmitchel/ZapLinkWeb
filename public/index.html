@@ -393,24 +393,40 @@
                 const now = c.now_playing;
                 const row = document.createElement('div');
                 row.className = 'channel-row';
+
+                // Content construction
+                const logo = c.icon ? `<img src="${c.icon}">` : `<span>${c.name ? c.name.charAt(0) : '?'}</span>`;
+                const progress = now ? `<div class="progress-track"><div class="progress-fill" style="width:${now.progress}%"></div></div>` : '';
+
                 row.innerHTML = `
-                    <div class="logo-box">${c.icon ? `<img src="${c.icon}">` : c.name.charAt(0)}</div>
-                    <div><span class="name">${c.name}</span><span class="number">VC ${c.number}</span></div>
+                    <div class="logo-box">${logo}</div>
+                    <div><span class="name">${c.name || 'Unknown Channel'}</span><span class="number">VC ${c.number}</span></div>
                     <div class="program-info">
                         <div style="font-weight:500">${now ? now.title : 'Live'}</div>
                         <div style="font-size:0.875rem; color:var(--text-secondary); display:-webkit-box; -webkit-line-clamp:1; line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;">${now ? (now.description || 'No description') : 'Signal Active'}</div>
-                        ${now ? `<div class="progress-track"><div class="progress-fill" style="width:${now.progress}%"></div></div>` : ''}
+                        ${progress}
                     </div>
                     <div style="display:flex; gap:0.5rem; justify-content:flex-end">
-                        <button class="btn btn-outline" onclick="copy('/stream/${c.number}${q}', event)">URL</button>
-                        <button class="btn btn-play" onclick="playByIndex(${index})">Watch</button>
+                        <button class="btn btn-outline btn-copy-url">URL</button>
+                        <button class="btn btn-play btn-watch">Watch</button>
                     </div>`;
+
+                // Event Listeners
+                row.querySelector('.btn-copy-url').addEventListener('click', (e) => copy(`/stream/${c.number}${q}`, e));
+                row.querySelector('.btn-watch').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    playByIndex(index);
+                });
+
                 list.appendChild(row);
             });
         }
 
         function playByIndex(index) {
+            console.log('Playing index:', index);
             const c = channelsData[index];
+            if (!c) return console.error('No channel at index', index);
+
             const format = document.getElementById('format-select').value;
             const codec = document.getElementById('codec-select').value;
             const now = c.now_playing;
@@ -418,20 +434,28 @@
         }
 
         function play(num, f, c, name, title, desc) {
-            const url = `/stream/${num}/${f}/${c}`;
-            const video = document.getElementById('videoElement');
-            document.getElementById('v-title').textContent = `${num} ${name} ${title ? '- ' + title : ''}`;
-            document.getElementById('v-desc').textContent = desc || 'Direct tuner stream.';
-            document.getElementById('player-overlay').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+            console.log('Starting stream:', { num, f, c });
+            try {
+                const url = `/stream/${encodeURIComponent(num)}/${f}/${c}`;
+                const video = document.getElementById('videoElement');
 
-            if (f === 'ts' && mpegts.getFeatureList().mseLivePlayback) {
-                tsPlayer = mpegts.createPlayer({ type: 'mse', isLive: true, url: url });
-                tsPlayer.attachMediaElement(video);
-                tsPlayer.load(); tsPlayer.play();
-            } else {
-                video.src = url;
-                video.play();
+                document.getElementById('v-title').textContent = `${num} ${name || ''} ${title ? '- ' + title : ''}`;
+                document.getElementById('v-desc').textContent = desc || 'Direct tuner stream.';
+                document.getElementById('player-overlay').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+
+                if (f === 'ts' && window.mpegts && mpegts.getFeatureList().mseLivePlayback) {
+                    tsPlayer = mpegts.createPlayer({ type: 'mse', isLive: true, url: url });
+                    tsPlayer.attachMediaElement(video);
+                    tsPlayer.load();
+                    tsPlayer.play().catch(e => console.error('Play error:', e));
+                } else {
+                    video.src = url;
+                    video.play().catch(e => console.error('Native play error:', e));
+                }
+            } catch (err) {
+                console.error('Failed to launch player:', err);
+                alert('Could not start video player. Check console for details.');
             }
         }
 
