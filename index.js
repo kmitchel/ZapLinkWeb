@@ -4,10 +4,16 @@ const { PORT, ENABLE_EPG } = require('./lib/config');
 const { dbExists } = require('./lib/db');
 const { TUNERS } = require('./lib/tuner');
 const EPG = require('./lib/epg');
+const DVR = require('./lib/dvr');
 const { setupRoutes } = require('./lib/routes');
 const { debugLog } = require('./lib/utils');
+const { RECORDINGS_DIR } = require('./lib/config');
 
 const app = express();
+app.use(express.json());
+
+// Initialize DVR
+DVR.init();
 
 // Block all requests until EPG scan is complete
 app.use((req, res, next) => {
@@ -41,6 +47,7 @@ app.use((req, res, next) => {
 
 // Serve static files
 app.use(express.static('public'));
+app.use('/recordings', express.static(RECORDINGS_DIR));
 
 // Set up routes
 setupRoutes(app);

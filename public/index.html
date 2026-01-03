@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Express Tuner - TV Guide</title>
+    <title>Express Tuner - DVR Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -19,9 +19,9 @@
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --text-dim: #64748b;
+            --danger: #ef4444;
             --channel-width: 200px;
             --time-slot-width: 300px;
-            /* 30 mins = 300px */
             --row-height: 80px;
         }
 
@@ -68,11 +68,39 @@
             margin: 0;
             font-size: 1.5rem;
             font-weight: 700;
-            letter-spacing: -0.04em;
             background: linear-gradient(to bottom right, #fff, #94a3b8);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        .main-nav {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: 0.2s;
+        }
+
+        .nav-link.active {
+            background: var(--accent-color);
+            color: #000;
+        }
+
+        .nav-link:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
         }
 
         .controls {
@@ -87,9 +115,17 @@
             color: var(--text-primary);
             padding: 0.5rem;
             border-radius: 0.5rem;
-            font-family: inherit;
-            font-size: 0.875rem;
             cursor: pointer;
+        }
+
+        /* Guide */
+        .page {
+            display: none;
+            padding-bottom: 300px;
+        }
+
+        .page.active {
+            display: block;
         }
 
         .guide-container {
@@ -99,7 +135,6 @@
             position: relative;
         }
 
-        /* Time Header */
         .time-header-wrapper {
             display: flex;
             margin-left: var(--channel-width);
@@ -132,7 +167,6 @@
             flex-direction: column;
             overflow-y: auto;
             max-height: calc(100vh - 120px);
-            /* 70px header + 50px time header */
         }
 
         .guide-row {
@@ -141,7 +175,6 @@
             position: relative;
         }
 
-        /* Channel Column */
         .channel-col {
             width: var(--channel-width);
             flex-shrink: 0;
@@ -193,14 +226,12 @@
             color: var(--text-dim);
         }
 
-        /* Programs Grid */
         .programs-wrapper {
             display: flex;
             overflow-x: auto;
             scroll-behavior: smooth;
             position: relative;
             flex-grow: 1;
-            -ms-overflow-style: none;
             scrollbar-width: none;
         }
 
@@ -241,6 +272,19 @@
             border-color: var(--accent-color);
         }
 
+        .program-tile.scheduled {
+            border-style: dashed;
+            border-color: #fbbf24;
+        }
+
+        .program-tile.scheduled::after {
+            content: '🔴';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.5rem;
+        }
+
         .prog-title {
             font-weight: 500;
             font-size: 0.9375rem;
@@ -257,7 +301,6 @@
             line-height: 1;
         }
 
-        /* Now Marker */
         .now-marker {
             position: absolute;
             top: 0;
@@ -269,7 +312,62 @@
             box-shadow: 0 0 10px var(--accent-color);
         }
 
-        /* Player Overlay */
+        /* Lists (Recordings/Schedule) */
+        .list-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .list-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: 0.2s;
+        }
+
+        .list-card:hover {
+            border-color: var(--accent-color);
+            background: var(--surface-hover);
+        }
+
+        .list-info h3 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.1rem;
+        }
+
+        .list-meta {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-recording {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .badge-timer {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent-color);
+        }
+
+        /* Details & Overlays */
         #player-overlay {
             position: fixed;
             top: 0;
@@ -285,16 +383,6 @@
             padding: 2rem;
         }
 
-        .player-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            max-width: 1400px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
         .video-box {
             flex: 1;
             background: #000;
@@ -305,7 +393,6 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
-            position: relative;
         }
 
         video {
@@ -325,17 +412,71 @@
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.2);
             font-size: 1.5rem;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s;
             color: #fff;
             backdrop-filter: blur(4px);
         }
 
         .close-player:hover {
             background: #ef4444;
-            border-color: #ef4444;
-            color: #fff;
             transform: rotate(90deg) scale(1.1);
             box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+
+        #details-panel {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            width: 700px;
+            max-width: 90vw;
+            z-index: 1500;
+            display: none;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.6rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .btn-play {
+            background: var(--accent-color);
+            color: #000;
+        }
+
+        .btn-rec {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            color: #fecaca;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.15);
         }
 
         @keyframes fadeIn {
@@ -349,78 +490,6 @@
                 transform: translateY(0);
             }
         }
-
-        /* Details Tooltip */
-        #details-panel {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--surface-color);
-            border: 1px solid var(--accent-color);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            width: 600px;
-            max-width: 90vw;
-            z-index: 1500;
-            display: none;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-        }
-
-        .details-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-        }
-
-        .details-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .details-desc {
-            font-size: 0.9375rem;
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-        }
-
-        .details-actions {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn {
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.6rem;
-            font-weight: 600;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: 0.2s;
-            border: none;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .btn-play {
-            background: var(--accent-color);
-            color: #000;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .btn-outline:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
     </style>
 </head>
 
@@ -430,49 +499,70 @@
         <div class="brand">
             <h1>Express Tuner</h1>
         </div>
+        <nav class="main-nav">
+            <div class="nav-link active" onclick="showPage('guide')">Guide</div>
+            <div class="nav-link" onclick="showPage('recordings')">Recordings</div>
+            <div class="nav-link" onclick="showPage('schedule')">Schedule</div>
+        </nav>
         <div class="controls">
             <select id="format-select">
                 <option value="ts">MPEG-TS</option>
-                <option value="mkv">Matroska</option>
+                <option value="mkv" selected>Matroska</option>
                 <option value="mp4">Fragmented MP4</option>
             </select>
             <select id="codec-select">
+                <option value="copy" selected>Copy</option>
                 <option value="h264">H.264</option>
                 <option value="h265">H.265</option>
                 <option value="av1">AV1</option>
-                <option value="copy">Copy</option>
             </select>
             <a href="/playlist.m3u" class="btn btn-outline" id="m3u-btn">M3U</a>
         </div>
     </header>
 
-    <div class="guide-container">
-        <div class="time-header-wrapper">
-            <div id="time-header" class="time-header"></div>
+    <!-- Guide Page -->
+    <div id="page-guide" class="page active">
+        <div class="guide-container">
+            <div class="time-header-wrapper">
+                <div id="time-header" class="time-header"></div>
+            </div>
+            <div id="guide-body" class="guide-body"></div>
         </div>
-        <div id="guide-body" class="guide-body"></div>
     </div>
 
-    <!-- Program Details Panel -->
+    <!-- Recordings Page -->
+    <div id="page-recordings" class="page">
+        <div class="list-container" id="recordings-list"></div>
+    </div>
+
+    <!-- Schedule Page -->
+    <div id="page-schedule" class="page">
+        <div class="list-container" id="schedule-list"></div>
+    </div>
+
+    <!-- Details Panel -->
     <div id="details-panel">
-        <div class="details-header">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1rem;">
             <div>
-                <h3 class="details-title" id="det-title">Program Title</h3>
-                <div class="prog-time" id="det-time">12:00 PM - 1:00 PM</div>
+                <h3 class="details-title" id="det-title" style="margin:0; font-size:1.4rem;">Program Title</h3>
+                <div class="prog-time" id="det-time" style="margin-top:0.25rem;">12:00 PM - 1:00 PM</div>
             </div>
-            <button class="close-player" onclick="closeDetails()"
-                style="width:32px; height:32px; font-size:1rem;">✕</button>
+            <div class="close-player" onclick="closeDetails()" style="width:32px; height:32px; font-size:1rem;">✕</div>
         </div>
-        <p class="details-desc" id="det-desc">Program description goes here...</p>
-        <div class="details-actions">
-            <button class="btn btn-play" id="watch-now-btn">Watch Now</button>
-            <button class="btn btn-outline" id="copy-url-btn">Copy Stream URL</button>
+        <p class="details-desc" id="det-desc"
+            style="font-size:1rem; color:var(--text-secondary); line-height:1.6; margin-bottom:2rem;">Description...</p>
+        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+            <button class="btn btn-play" id="watch-now-btn">Watch Live</button>
+            <button class="btn btn-rec" id="record-once-btn">Record Once</button>
+            <button class="btn btn-rec" id="record-series-btn" style="background: #991b1b;">Record Series</button>
+            <button class="btn btn-outline" id="copy-url-btn">Stream URL</button>
         </div>
     </div>
 
     <!-- Player Overlay -->
     <div id="player-overlay">
-        <div class="player-content">
+        <div
+            style="flex: 1; display:flex; flex-direction:column; gap:1.5rem; max-width:1400px; width:100%; margin:0 auto;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h2 id="v-title" style="margin:0; font-size:1.25rem;"></h2>
                 <div class="close-player" onclick="closePlayer()">✕</div>
@@ -485,23 +575,32 @@
     <script>
         let tsPlayer = null;
         let guideData = [];
-        let startTime = Date.now() - (30 * 60 * 1000); // Start grid 30 mins ago
+        let startTime = Date.now() - (30 * 60 * 1000);
         const pixelsPerHour = 600;
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            if (pageId === 'guide') loadGuide();
+            if (pageId === 'recordings') loadRecordings();
+            if (pageId === 'schedule') loadSchedule();
+        }
 
         async function loadGuide() {
             try {
                 const r = await fetch('/api/guide');
                 const d = await r.json();
                 guideData = d.channels;
-                render();
-            } catch (e) { console.error('Error loading guide:', e); }
+                renderGuide();
+            } catch (e) { console.error(e); }
         }
 
-        function render() {
+        function renderGuide() {
             const timeHeader = document.getElementById('time-header');
             const guideBody = document.getElementById('guide-body');
-
-            // Build time header (12 hours)
             timeHeader.innerHTML = '';
             for (let i = 0; i < 24; i++) {
                 const slotTime = new Date(startTime + (i * 30 * 60 * 1000));
@@ -515,16 +614,10 @@
             guideData.forEach(chan => {
                 const row = document.createElement('div');
                 row.className = 'guide-row';
-
                 row.innerHTML = `
                     <div class="channel-col">
-                        <div class="channel-logo">
-                            ${chan.icon ? `<img src="${chan.icon}">` : chan.name.charAt(0)}
-                        </div>
-                        <div class="channel-info">
-                            <span class="channel-name">${chan.name}</span>
-                            <span class="channel-num">VC ${chan.number}</span>
-                        </div>
+                        <div class="channel-logo">${chan.icon ? `<img src="${chan.icon}">` : chan.name.charAt(0)}</div>
+                        <div class="channel-info"><span class="channel-name">${chan.name}</span><span class="channel-num">VC ${chan.number}</span></div>
                     </div>
                     <div class="programs-wrapper">
                         <div class="programs-grid" style="width: ${12 * pixelsPerHour}px">
@@ -533,52 +626,35 @@
                     const width = ((p.end - p.start) / 3600000) * pixelsPerHour;
                     if (left + width < 0) return '';
                     const isActive = Date.now() >= p.start && Date.now() < p.end;
-                    return `<div class="program-tile ${isActive ? 'active' : ''}" 
+                    return `<div class="program-tile ${isActive ? 'active' : ''} ${p.scheduled ? 'scheduled' : ''}" 
                                             style="left: ${left}px; width: ${width - 4}px"
                                             onclick="showDetails('${chan.number}', '${chan.name.replace(/'/g, "\\'")}', ${JSON.stringify(p).replace(/"/g, '&quot;')})"
-                                            ondblclick="play('${chan.number}', document.getElementById('format-select').value, document.getElementById('codec-select').value, '${chan.name.replace(/'/g, "\\'")}', '${p.title.replace(/'/g, "\\'")}')">
+                                            ondblclick="playLive('${chan.number}', '${chan.name.replace(/'/g, "\\'")}', '${p.title.replace(/'/g, "\\'")}')">
                                             <div class="prog-title">${p.title}</div>
                                             <div class="prog-time">${new Date(p.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
                                         </div>`;
                 }).join('')}
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 guideBody.appendChild(row);
             });
 
-            // Update Now Marker
             updateNowMarker();
-
-            // Synchronize Horizontal Scrolling
             const wrappers = document.querySelectorAll('.programs-wrapper');
             wrappers.forEach(w => {
                 w.addEventListener('scroll', () => {
                     document.getElementById('time-header').style.transform = `translateX(-${w.scrollLeft}px)`;
-                    wrappers.forEach(other => {
-                        if (other !== w) other.scrollLeft = w.scrollLeft;
-                    });
+                    wrappers.forEach(o => { if (o !== w) o.scrollLeft = w.scrollLeft; });
                 });
             });
-
-            // Auto-scroll to current time
             const initialScroll = ((Date.now() - startTime) / 3600000) * pixelsPerHour - 200;
             wrappers.forEach(w => w.scrollLeft = Math.max(0, initialScroll));
-
-            // Update M3U Link
-            const updateM3ULink = () => {
-                const f = document.getElementById('format-select').value;
-                const c = document.getElementById('codec-select').value;
-                document.getElementById('m3u-btn').href = `/playlist.m3u?f=${f}&c=${c}`;
-            };
-            document.getElementById('format-select').onchange = updateM3ULink;
-            document.getElementById('codec-select').onchange = updateM3ULink;
-            updateM3ULink();
         }
 
         function updateNowMarker() {
             document.querySelectorAll('.now-marker').forEach(m => m.remove());
-            const nowLeft = ((Date.now() - startTime) / 3600000) * pixelsPerHour;
+            const now = Date.now();
+            const nowLeft = ((now - startTime) / 3600000) * pixelsPerHour;
             document.querySelectorAll('.programs-grid').forEach(grid => {
                 const m = document.createElement('div');
                 m.className = 'now-marker';
@@ -588,27 +664,29 @@
         }
 
         let clickTimer = null;
-        function showDetails(chanNum, chanName, program) {
-            if (clickTimer) {
-                clearTimeout(clickTimer);
-                clickTimer = null;
-                return;
-            }
-
+        function showDetails(num, name, p) {
+            if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
             clickTimer = setTimeout(() => {
-                document.getElementById('det-title').textContent = program.title;
-                document.getElementById('det-time').textContent = `${new Date(program.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(program.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
-                document.getElementById('det-desc').textContent = program.description || 'No description available.';
+                document.getElementById('det-title').textContent = p.title;
+                document.getElementById('det-time').textContent = `${new Date(p.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(p.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+                document.getElementById('det-desc').textContent = p.description || 'No description.';
+                document.getElementById('details-panel').style.display = 'block';
 
-                const panel = document.getElementById('details-panel');
-                panel.style.display = 'block';
+                const f = document.getElementById('format-select').value;
+                const c = document.getElementById('codec-select').value;
+                document.getElementById('watch-now-btn').onclick = () => playLive(num, name, p.title);
+                document.getElementById('copy-url-btn').onclick = () => copy(`/stream/${num}?f=${f}&c=${c}`);
 
-                const format = document.getElementById('format-select').value;
-                const codec = document.getElementById('codec-select').value;
-                const q = `?f=${format}&c=${codec}`;
+                document.getElementById('record-once-btn').onclick = () => schedule('once', p.title, num, p.start, p.end);
+                document.getElementById('record-series-btn').onclick = () => schedule('series', p.title, num);
 
-                document.getElementById('watch-now-btn').onclick = () => play(chanNum, format, codec, chanName, program.title);
-                document.getElementById('copy-url-btn').onclick = (e) => copy(`/stream/${chanNum}${q}`, e);
+                if (p.scheduled) {
+                    document.querySelectorAll('.btn-rec').forEach(b => { b.disabled = true; b.style.opacity = 0.5; b.textContent = 'Scheduled'; });
+                } else {
+                    document.querySelectorAll('.btn-rec').forEach(b => { b.disabled = false; b.style.opacity = 1; });
+                    document.getElementById('record-once-btn').textContent = 'Record Once';
+                    document.getElementById('record-series-btn').textContent = 'Record Series';
+                }
 
                 clickTimer = null;
             }, 250);
@@ -619,28 +697,94 @@
             document.getElementById('details-panel').style.display = 'none';
         }
 
-        function play(num, f, c, name, title) {
-            if (clickTimer) {
-                clearTimeout(clickTimer);
-                clickTimer = null;
+        async function schedule(type, title, num, start, end) {
+            const res = await fetch('/api/timers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, title, channel_num: num, start_time: start, end_time: end })
+            });
+            if (res.ok) {
+                alert(`${type === 'series' ? 'Series' : 'Program'} scheduled!`);
+                closeDetails();
+                loadGuide();
             }
-            const url = `/stream/${encodeURIComponent(num)}/${f}/${c}`;
+        }
+
+        async function loadRecordings() {
+            const r = await fetch('/api/recordings');
+            const data = await r.json();
+            const list = document.getElementById('recordings-list');
+            list.innerHTML = data.length ? '' : '<p style="text-align:center; color:var(--text-dim);">No recordings found.</p>';
+            data.forEach(rec => {
+                const card = document.createElement('div');
+                card.className = 'list-card';
+                card.innerHTML = `
+                    <div class="list-info">
+                        <h3>${rec.title}</h3>
+                        <div class="list-meta">
+                            <span>${rec.channel_name}</span>
+                            <span>${new Date(rec.start_time).toLocaleString()}</span>
+                            ${rec.status === 'recording' ? '<span class="badge badge-recording">Recording</span>' : ''}
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:1rem;">
+                        <button class="btn btn-play" onclick="playFile('/recordings/${rec.file_path.split(/[\\/]/).pop()}', '${rec.title}')">Play</button>
+                        <button class="btn btn-outline btn-danger" onclick="deleteRec(${rec.id})">Delete</button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        async function loadSchedule() {
+            const r = await fetch('/api/timers');
+            const data = await r.json();
+            const list = document.getElementById('schedule-list');
+            list.innerHTML = data.length ? '' : '<p style="text-align:center; color:var(--text-dim);">No scheduled timers.</p>';
+            data.forEach(t => {
+                const card = document.createElement('div');
+                card.className = 'list-card';
+                card.innerHTML = `
+                    <div class="list-info">
+                        <h3>${t.title}</h3>
+                        <div class="list-meta">
+                            <span class="badge badge-timer">${t.type}</span>
+                            <span>${t.channel_num ? 'Channel ' + t.channel_num : 'Any Channel'}</span>
+                            ${t.start_time ? `<span>Starts: ${new Date(t.start_time).toLocaleString()}</span>` : ''}
+                        </div>
+                    </div>
+                    <button class="btn btn-outline btn-danger" onclick="deleteTimer(${t.id})">Cancel</button>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        async function deleteRec(id) { if (confirm('Delete this recording?')) { await fetch('/api/recordings/' + id, { method: 'DELETE' }); loadRecordings(); } }
+        async function deleteTimer(id) { if (confirm('Cancel this timer?')) { await fetch('/api/timers/' + id, { method: 'DELETE' }); loadSchedule(); } }
+
+        function playLive(num, name, title) {
+            const f = document.getElementById('format-select').value;
+            const c = document.getElementById('codec-select').value;
+            launchPlayer(`/stream/${encodeURIComponent(num)}/${f}/${c}`, `${num} ${name} - ${title}`);
+        }
+
+        function playFile(url, title) { launchPlayer(url, title); }
+
+        function launchPlayer(url, title) {
             const video = document.getElementById('videoElement');
-            document.getElementById('v-title').textContent = `${num} ${name} - ${title}`;
+            document.getElementById('v-title').textContent = title;
             document.getElementById('player-overlay').style.display = 'flex';
             document.body.style.overflow = 'hidden';
-            closeDetails();
-
             history.pushState({ playerOpen: true }, '', '#player');
 
-            if (f === 'ts' && window.mpegts && mpegts.getFeatureList().mseLivePlayback) {
-                tsPlayer = mpegts.createPlayer({ type: 'mse', isLive: true, url: url });
-                tsPlayer.attachMediaElement(video);
-                tsPlayer.load(); tsPlayer.play();
-            } else {
-                video.src = url;
-                video.play();
-            }
+            if (url.includes('.mkv') || url.includes('/stream/') && document.getElementById('format-select').value === 'ts') {
+                if (window.mpegts && mpegts.getFeatureList().mseLivePlayback) {
+                    tsPlayer = mpegts.createPlayer({ type: 'mse', isLive: url.includes('/stream/'), url: url });
+                    tsPlayer.attachMediaElement(video);
+                    tsPlayer.load(); tsPlayer.play();
+                } else { video.src = url; video.play(); }
+            } else { video.src = url; video.play(); }
+            closeDetails();
         }
 
         function closePlayer(isPopState = false) {
@@ -655,18 +799,13 @@
         window.addEventListener('popstate', () => { if (document.getElementById('player-overlay').style.display === 'flex') closePlayer(true); });
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closePlayer(); closeDetails(); } });
 
-        function copy(path, e) {
+        function copy(path) {
             const url = window.location.origin + path;
-            const btn = e.currentTarget;
-            navigator.clipboard.writeText(url).then(() => {
-                const old = btn.textContent; btn.textContent = 'Copied!';
-                setTimeout(() => btn.textContent = old, 1500);
-            });
+            navigator.clipboard.writeText(url).then(() => alert('URL Copied!'));
         }
 
         loadGuide();
         setInterval(updateNowMarker, 60000);
-        setInterval(loadGuide, 300000); // Refresh guide every 5 mins
     </script>
 </body>
 
