@@ -954,6 +954,10 @@
         function renderGuide() {
             const timeHeader = document.getElementById('time-header');
             const guideBody = document.getElementById('guide-body');
+
+            // Capture existing horizontal scroll to restore it
+            const scrollX = document.querySelector('.programs-wrapper')?.scrollLeft || 0;
+
             timeHeader.innerHTML = '';
             for (let i = 0; i < 24; i++) {
                 const slotTime = new Date(startTime + i * 30 * 60 * 1000);
@@ -996,7 +1000,7 @@
                         <div class="channel-logo">${chan.icon ? `<img src="${chan.icon}">` : chan.name.charAt(0)}</div>
                         <div class="channel-info" style="flex: 1">
                             <span class="channel-name">${chan.name}</span>
-                            <div style="display: flex; gap: 0.5rem; align-items: center">
+                            <div style="display: flex; gap: 0.25rem; align-items: center">
                                 <div class="fav-star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${chan.number}', event)">★</div>
                                 <span class="channel-num">VC ${chan.number}</span>
                             </div>
@@ -1032,6 +1036,9 @@
 
             const wrappers = document.querySelectorAll('.programs-wrapper');
             wrappers.forEach((w) => {
+                // Restore horizontal scroll
+                w.scrollLeft = scrollX;
+
                 w.addEventListener('scroll', () => {
                     const scrollX = w.scrollLeft;
                     document.getElementById('time-header').style.transform = `translateX(-${scrollX}px)`;
@@ -1166,13 +1173,20 @@
         function toggleFavorite(chanNum, event) {
             event.stopPropagation();
             let favorites = JSON.parse(localStorage.getItem('zaplink_favorites') || '[]');
-            if (favorites.includes(chanNum)) {
-                favorites = favorites.filter((f) => f !== chanNum);
-            } else {
+            const isAdding = !favorites.includes(chanNum);
+
+            if (isAdding) {
                 favorites.push(chanNum);
+            } else {
+                favorites = favorites.filter((f) => f !== chanNum);
             }
             localStorage.setItem('zaplink_favorites', JSON.stringify(favorites));
+
             renderGuide();
+
+            if (isAdding) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
         async function openChannelDetail(num, name, icon) {
