@@ -518,7 +518,9 @@
     <div class="hero-bg"></div>
     <header>
         <div class="brand">
-            <h1>Express Tuner</h1>
+            <h1>Express Tuner <span id="app-version"
+                    style="font-size:0.4em; opacity:0.5; vertical-align:middle; margin-left:8px; font-weight:normal;"></span>
+            </h1>
         </div>
         <nav class="main-nav">
             <div class="nav-link active" onclick="showPage('guide')">Guide</div>
@@ -561,9 +563,11 @@
                     <p>Construct URLs using the pattern: <code>/stream/{ChannelNumber}/{Format}/{Codec}</code></p>
                     <ul style="margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
                         <li><strong>Format:</strong> <code>ts</code> (MPEG-TS), <code>mp4</code> (Fragmented MP4),
-                            <code>mkv</code> (Matroska)</li>
+                            <code>mkv</code> (Matroska)
+                        </li>
                         <li><strong>Codec:</strong> <code>copy</code> (Direct Stream), <code>h264</code>,
-                            <code>h265</code>, <code>av1</code></li>
+                            <code>h265</code>, <code>av1</code>
+                        </li>
                     </ul>
                     <div
                         style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.9em; border: 1px solid var(--border-color);">
@@ -580,7 +584,8 @@
                     <ul style="margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
                         <li><strong>f (Format):</strong> <code>ts</code>, <code>mp4</code>, <code>mkv</code></li>
                         <li><strong>c (Codec):</strong> <code>copy</code>, <code>h264</code>, <code>h265</code>,
-                            <code>av1</code></li>
+                            <code>av1</code>
+                        </li>
                     </ul>
                     <div
                         style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.9em; border: 1px solid var(--border-color);">
@@ -1031,8 +1036,10 @@
         }
 
 
-        loadGuide();
-        setInterval(updateNowMarker, 60000);
+        updateNowMarker();
+        fetch('/api/version').then(r => r.json()).then(d => {
+            if (d.version !== 'unknown') document.getElementById('app-version').textContent = 'v' + d.version;
+        }).catch(e => console.log('Version check failed:', e));
     </script>
 </body>
 
