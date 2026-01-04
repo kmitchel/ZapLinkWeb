@@ -1000,7 +1000,7 @@
                         <div class="channel-logo">${chan.icon ? `<img src="${chan.icon}">` : chan.name.charAt(0)}</div>
                         <div class="channel-info" style="flex: 1">
                             <span class="channel-name">${chan.name}</span>
-                            <div style="display: flex; gap: 0.25rem; align-items: center">
+                            <div style="display: flex; gap: 0.15rem; align-items: center">
                                 <div class="fav-star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${chan.number}', event)">★</div>
                                 <span class="channel-num">VC ${chan.number}</span>
                             </div>
@@ -1048,8 +1048,10 @@
                     });
                 });
             });
-            const initialScroll = ((Date.now() - startTime) / 3600000) * pixelsPerHour - 200;
-            wrappers.forEach((w) => (w.scrollLeft = Math.max(0, initialScroll)));
+            if (scrollX === 0) {
+                const initialScroll = ((Date.now() - startTime) / 3600000) * pixelsPerHour - 200;
+                wrappers.forEach((w) => (w.scrollLeft = Math.max(0, initialScroll)));
+            }
         }
 
         function updateNowMarker() {
@@ -1185,7 +1187,8 @@
             renderGuide();
 
             if (isAdding) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const content = document.querySelector('.content');
+                if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
