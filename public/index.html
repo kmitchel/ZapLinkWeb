@@ -996,9 +996,9 @@
                         <div class="channel-logo">${chan.icon ? `<img src="${chan.icon}">` : chan.name.charAt(0)}</div>
                         <div class="channel-info" style="flex: 1">
                             <span class="channel-name">${chan.name}</span>
-                            <div style="display: flex; justify-content: space-between; align-items: center">
-                                <span class="channel-num">VC ${chan.number}</span>
+                            <div style="display: flex; gap: 0.5rem; align-items: center">
                                 <div class="fav-star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${chan.number}', event)">★</div>
+                                <span class="channel-num">VC ${chan.number}</span>
                             </div>
                         </div>
                     </div>
