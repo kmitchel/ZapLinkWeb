@@ -130,7 +130,16 @@
             height: 32px;
             width: auto;
             border-radius: 6px;
-            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.3));
+            background: transparent !important;
+            display: block;
+            /* Ensure no inheritance from body color */
+            color: transparent;
+            filter: drop-shadow(0 0 15px var(--accent-glow));
+            transition: transform 0.3s ease;
+        }
+
+        .brand img:hover {
+            transform: scale(1.05);
         }
 
         .brand h1 {
@@ -629,7 +638,7 @@
     <div class="hero-bg"></div>
     <header>
         <div class="brand">
-            <img src="/images/zaplink.png" alt="Logo">
+            <img src="/images/zaplink.png?v=1.1" alt="Logo">
             <h1>ZapLink</h1>
             <span id="app-version"></span>
         </div>
