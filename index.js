@@ -3,6 +3,7 @@ const { execSync } = require('child_process');
 const { PORT, ENABLE_EPG } = require('./lib/config');
 const { dbExists } = require('./lib/db');
 const { TUNERS } = require('./lib/tuner');
+const Channels = require('./lib/channels');
 const EPG = require('./lib/epg');
 const DVR = require('./lib/dvr');
 const { setupRoutes } = require('./lib/routes');
@@ -14,6 +15,9 @@ app.use(express.json());
 
 // Initialize DVR
 DVR.init();
+
+// Start background download of channel icons
+Channels.downloadImages();
 
 // Block all requests until EPG scan is complete
 // Get build version (count + short hash)
