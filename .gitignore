@@ -1,5 +1,22 @@
-node_modules
+node_modules/
 .env
 *.log
-
 epg.db
+
+# Environmental/Local Data
+channels.conf
+old.channels
+logos.json
+public/logos/
+public/hls/
+recordings/
+public/images/
+index.js.bak
+pwned_permissions
+test_logos.js
+*.m3u
+*.xml
+*.json.bak
+*.db-journal
+*.db-shm
+*.db-wal

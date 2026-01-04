@@ -1,13 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Express Tuner - DVR Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZapLink - DVR Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
     <style>
         :root {
             --bg-color: #020617;
@@ -99,7 +100,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.05) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+            background:
+                radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
             z-index: -1;
         }
 
@@ -619,15 +622,16 @@
     <div class="hero-bg"></div>
     <header>
         <div class="brand">
-            <h1>Express Tuner</h1>
+            <h1>ZapLink</h1>
             <span id="app-version"></span>
         </div>
         <nav class="main-nav">
             <div class="nav-link active" onclick="showPage('guide')">Guide</div>
             <div class="nav-link" onclick="showPage('recordings')">Recordings</div>
             <div class="nav-link" onclick="showPage('schedule')">Schedule</div>
-            <div class="nav-link" onclick="showPage('help')" style="opacity: 0.6; font-size: 0.8em; margin-left: 1rem;">
-                Help</div>
+            <div class="nav-link" onclick="showPage('help')" style="opacity: 0.6; font-size: 0.8em; margin-left: 1rem">
+                Help
+            </div>
         </nav>
     </header>
 
@@ -655,43 +659,59 @@
     <!-- Help Page -->
     <div id="page-help" class="page">
         <div class="list-container"
-            style="color: var(--text-primary); max-width: 800px; margin: 0 auto; line-height: 1.6;">
+            style="color: var(--text-primary); max-width: 800px; margin: 0 auto; line-height: 1.6">
             <h2>Streaming Documentation</h2>
 
-            <div class="list-card" style="margin-bottom: 2rem;">
-                <div class="list-info" style="display: block;">
-                    <h3 style="margin-bottom: 1rem; color: var(--accent-color);">Live TV Streams</h3>
+            <div class="list-card" style="margin-bottom: 2rem">
+                <div class="list-info" style="display: block">
+                    <h3 style="margin-bottom: 1rem; color: var(--accent-color)">Live TV Streams</h3>
                     <p>Construct URLs using the pattern: <code>/stream/{ChannelNumber}/{Format}/{Codec}</code></p>
-                    <ul style="margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
-                        <li><strong>Format:</strong> <code>ts</code> (MPEG-TS), <code>mp4</code> (Fragmented MP4),
-                            <code>mkv</code> (Matroska). <em>(Defaults to <code>ts</code> if omitted, or
-                                <code>mkv</code> if codec is <code>av1</code>)</em>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary)">
+                        <li>
+                            <strong>Format:</strong> <code>ts</code> (MPEG-TS), <code>mp4</code> (Fragmented MP4),
+                            <code>mkv</code> (Matroska).
+                            <em>(Defaults to <code>ts</code> if omitted, or <code>mkv</code> if codec is
+                                <code>av1</code>)</em>
                         </li>
-                        <li><strong>Codec:</strong> <code>copy</code> (Direct Stream), <code>h264</code>,
-                            <code>h265</code>, <code>av1</code>. <em>(Defaults to server setting `TRANSCODE_CODEC`,
-                                usually <code>h264</code>)</em>
+                        <li>
+                            <strong>Codec:</strong> <code>copy</code> (Direct Stream), <code>h264</code>,
+                            <code>h265</code>, <code>av1</code>.
+                            <em>(Defaults to server setting `TRANSCODE_CODEC`, usually <code>h264</code>)</em>
                         </li>
                     </ul>
-                    <div
-                        style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.9em; border: 1px solid var(--border-color);">
-                        http://{ServerIP}:3000/stream/5.1/mp4/h264<br>
+                    <div style="
+                                background: rgba(0, 0, 0, 0.3);
+                                padding: 1rem;
+                                border-radius: 6px;
+                                font-family: monospace;
+                                font-size: 0.9em;
+                                border: 1px solid var(--border-color);
+                            ">
+                        http://{ServerIP}:3000/stream/5.1/mp4/h264<br />
                         http://{ServerIP}:3000/stream/15.2/ts/copy
                     </div>
                 </div>
             </div>
 
-            <div class="list-card" style="margin-bottom: 2rem;">
-                <div class="list-info" style="display: block;">
-                    <h3 style="margin-bottom: 1rem; color: var(--accent-color);">M3U Playlist</h3>
+            <div class="list-card" style="margin-bottom: 2rem">
+                <div class="list-info" style="display: block">
+                    <h3 style="margin-bottom: 1rem; color: var(--accent-color)">M3U Playlist</h3>
                     <p>Generate a playlist for your media player using query parameters.</p>
-                    <ul style="margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary)">
                         <li><strong>f (Format):</strong> <code>ts</code>, <code>mp4</code>, <code>mkv</code></li>
-                        <li><strong>c (Codec):</strong> <code>copy</code>, <code>h264</code>, <code>h265</code>,
+                        <li>
+                            <strong>c (Codec):</strong> <code>copy</code>, <code>h264</code>, <code>h265</code>,
                             <code>av1</code>
                         </li>
                     </ul>
-                    <div
-                        style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.9em; border: 1px solid var(--border-color);">
+                    <div style="
+                                background: rgba(0, 0, 0, 0.3);
+                                padding: 1rem;
+                                border-radius: 6px;
+                                font-family: monospace;
+                                font-size: 0.9em;
+                                border: 1px solid var(--border-color);
+                            ">
                         http://{ServerIP}:3000/playlist.m3u?f=mp4&c=h264
                     </div>
                 </div>
@@ -701,42 +721,54 @@
 
     <!-- Details Panel -->
     <div id="details-panel">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1rem;">
-            <div style="display:flex; gap:1rem; align-items:center;">
-                <div id="det-icon" class="channel-logo" style="width:48px; height:48px; border-radius:0.75rem;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem">
+            <div style="display: flex; gap: 1rem; align-items: center">
+                <div id="det-icon" class="channel-logo" style="width: 48px; height: 48px; border-radius: 0.75rem"></div>
                 <div>
-                    <h3 class="details-title" id="det-title" style="margin:0; font-size:1.4rem;">Program Title</h3>
-                    <div class="prog-time" id="det-time" style="margin-top:0.25rem;">12:00 PM - 1:00 PM</div>
+                    <h3 class="details-title" id="det-title" style="margin: 0; font-size: 1.4rem">Program Title</h3>
+                    <div class="prog-time" id="det-time" style="margin-top: 0.25rem">12:00 PM - 1:00 PM</div>
                 </div>
             </div>
-            <div class="close-player" onclick="closeDetails()" style="width:32px; height:32px; font-size:1rem;">✕</div>
+            <div class="close-player" onclick="closeDetails()" style="width: 32px; height: 32px; font-size: 1rem">
+                ✕
+            </div>
         </div>
         <p class="details-desc" id="det-desc"
-            style="font-size:1rem; color:var(--text-secondary); line-height:1.6; margin-bottom:2rem;">Description...</p>
-        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+            style="font-size: 1rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 2rem">
+            Description...
+        </p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap">
             <button class="btn btn-play" id="watch-now-btn">Watch Live</button>
             <button class="btn btn-rec" id="record-once-btn">Record Once</button>
-            <button class="btn btn-rec" id="record-series-btn" style="background: #991b1b;">Record Series</button>
+            <button class="btn btn-rec" id="record-series-btn" style="background: #991b1b">Record Series</button>
             <button class="btn btn-rec" id="stop-recording-btn"
-                style="display:none; background: #dc2626; color: white;">Stop Recording</button>
+                style="display: none; background: #dc2626; color: white">
+                Stop Recording
+            </button>
             <button class="btn btn-outline" id="copy-url-btn">Stream URL</button>
         </div>
     </div>
 
     <!-- Player Overlay -->
     <div id="player-overlay">
-        <div
-            style="flex: 1; display:flex; flex-direction:column; gap:1.5rem; max-width:1400px; width:100%; margin:0 auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.5rem;
+                    max-width: 1400px;
+                    width: 100%;
+                    margin: 0 auto;
+                ">
+            <div style="display: flex; justify-content: space-between; align-items: center">
                 <div>
-                    <h2 id="v-title" style="margin:0; font-size:1.25rem;"></h2>
-                    <div id="v-status" style="font-size:0.85rem; color:var(--text-dim); margin-top:0.25rem;"></div>
+                    <h2 id="v-title" style="margin: 0; font-size: 1.25rem"></h2>
+                    <div id="v-status" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 0.25rem"></div>
                 </div>
                 <div class="close-player" onclick="closePlayer()">✕</div>
             </div>
             <div class="video-box"><video id="videoElement" controls></video></div>
         </div>
-    </div>
     </div>
 
     <!-- Toast Container -->
@@ -748,13 +780,13 @@
         let tsPlayer = null;
         let hlsPlayer = null;
         let guideData = [];
-        let startTime = Date.now() - (30 * 60 * 1000);
+        let startTime = Date.now() - 30 * 60 * 1000;
         const pixelsPerHour = 600;
 
         function showPage(pageId) {
             closeDetails();
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach((n) => n.classList.remove('active'));
             document.getElementById('page-' + pageId).classList.add('active');
             event.currentTarget.classList.add('active');
 
@@ -769,7 +801,9 @@
                 const d = await r.json();
                 guideData = d.channels;
                 renderGuide();
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         function renderGuide() {
@@ -777,7 +811,7 @@
             const guideBody = document.getElementById('guide-body');
             timeHeader.innerHTML = '';
             for (let i = 0; i < 24; i++) {
-                const slotTime = new Date(startTime + (i * 30 * 60 * 1000));
+                const slotTime = new Date(startTime + i * 30 * 60 * 1000);
                 const slot = document.createElement('div');
                 slot.className = 'time-slot';
                 slot.textContent = slotTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -785,7 +819,7 @@
             }
 
             guideBody.innerHTML = '';
-            guideData.forEach(chan => {
+            guideData.forEach((chan) => {
                 const row = document.createElement('div');
                 row.className = 'guide-row';
                 row.innerHTML = `
@@ -795,15 +829,16 @@
                     </div>
                     <div class="programs-wrapper">
                         <div class="programs-grid" style="width: ${12 * pixelsPerHour}px">
-                            ${chan.programs.map(p => {
-                    const left = ((p.start - startTime) / 3600000) * pixelsPerHour;
-                    const width = ((p.end - p.start) / 3600000) * pixelsPerHour;
-                    if (left + width < 0) return '';
-                    const isActive = Date.now() >= p.start && Date.now() < p.end;
-                    const isScheduled = p.scheduled ? 'scheduled' : '';
-                    const isRecording = p.recording ? 'recording' : '';
-                    const isFailed = p.failed ? 'failed' : '';
-                    return `
+                            ${chan.programs
+                        .map((p) => {
+                            const left = ((p.start - startTime) / 3600000) * pixelsPerHour;
+                            const width = ((p.end - p.start) / 3600000) * pixelsPerHour;
+                            if (left + width < 0) return '';
+                            const isActive = Date.now() >= p.start && Date.now() < p.end;
+                            const isScheduled = p.scheduled ? 'scheduled' : '';
+                            const isRecording = p.recording ? 'recording' : '';
+                            const isFailed = p.failed ? 'failed' : '';
+                            return `
                         <div class="program-tile ${isActive ? 'active' : ''} ${isScheduled} ${isRecording} ${isFailed}"
                              style="left: ${left}px; width: ${width - 2}px"
                              onclick="showDetails('${chan.number}', '${chan.name.replace(/'/g, "\\'")}', ${JSON.stringify(p).replace(/"/g, '&quot;')}, '${chan.icon || ''}')"
@@ -813,23 +848,26 @@
                                                 <div class="prog-time">${new Date(p.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
                                             </div>
                                         </div>`;
-                }).join('')}
+                        })
+                        .join('')}
                         </div>
                     </div>`;
                 guideBody.appendChild(row);
             });
 
             const wrappers = document.querySelectorAll('.programs-wrapper');
-            wrappers.forEach(w => {
+            wrappers.forEach((w) => {
                 w.addEventListener('scroll', () => {
                     const scrollX = w.scrollLeft;
                     document.getElementById('time-header').style.transform = `translateX(-${scrollX}px)`;
                     updateNowMarkerPosition(scrollX);
-                    wrappers.forEach(o => { if (o !== w) o.scrollLeft = scrollX; });
+                    wrappers.forEach((o) => {
+                        if (o !== w) o.scrollLeft = scrollX;
+                    });
                 });
             });
             const initialScroll = ((Date.now() - startTime) / 3600000) * pixelsPerHour - 200;
-            wrappers.forEach(w => w.scrollLeft = Math.max(0, initialScroll));
+            wrappers.forEach((w) => (w.scrollLeft = Math.max(0, initialScroll)));
         }
 
         function updateNowMarker() {
@@ -851,17 +889,24 @@
 
         let clickTimer = null;
         function showDetails(num, name, p, icon) {
-            if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+                clickTimer = null;
+                return;
+            }
             clickTimer = setTimeout(() => {
                 document.getElementById('det-title').textContent = p.title;
-                document.getElementById('det-time').textContent = `${new Date(p.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(p.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+                document.getElementById('det-time').textContent =
+                    `${new Date(p.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(p.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
 
                 let statusText = '';
                 if (p.recording) statusText = 'Currently Recording';
                 else if (p.failed) statusText = 'Recording Failed';
                 else if (p.scheduled) statusText = 'Scheduled to Record';
 
-                document.getElementById('det-desc').innerHTML = (statusText ? `<strong style="color:var(--accent-color)">[${statusText}]</strong><br>` : '') + (p.description || 'No description.');
+                document.getElementById('det-desc').innerHTML =
+                    (statusText ? `<strong style="color:var(--accent-color)">[${statusText}]</strong><br>` : '') +
+                    (p.description || 'No description.');
 
                 const iconBox = document.getElementById('det-icon');
                 iconBox.innerHTML = icon ? `<img src="${icon}">` : name.charAt(0);
@@ -873,7 +918,8 @@
                     copy(`/stream/${encodeURIComponent(num)}/mp4/h264`);
                 };
 
-                document.getElementById('record-once-btn').onclick = () => schedule('once', p.title, num, p.start, p.end);
+                document.getElementById('record-once-btn').onclick = () =>
+                    schedule('once', p.title, num, p.start, p.end);
                 document.getElementById('record-series-btn').onclick = () => schedule('series', p.title, num);
                 document.getElementById('stop-recording-btn').onclick = () => stopActiveRecording(num, p.start);
 
@@ -885,18 +931,21 @@
                     document.getElementById('stop-recording-btn').style.display = 'none';
                     document.getElementById('record-once-btn').style.display = 'inline-flex';
                     document.getElementById('record-series-btn').style.display = 'inline-flex';
-                    document.querySelectorAll('.btn-rec').forEach(b => {
+                    document.querySelectorAll('.btn-rec').forEach((b) => {
                         if (b.id !== 'stop-recording-btn') {
-                            b.disabled = true; b.style.opacity = 0.5; b.textContent = 'Scheduled';
+                            b.disabled = true;
+                            b.style.opacity = 0.5;
+                            b.textContent = 'Scheduled';
                         }
                     });
                 } else {
                     document.getElementById('stop-recording-btn').style.display = 'none';
                     document.getElementById('record-once-btn').style.display = 'inline-flex';
                     document.getElementById('record-series-btn').style.display = 'inline-flex';
-                    document.querySelectorAll('.btn-rec').forEach(b => {
+                    document.querySelectorAll('.btn-rec').forEach((b) => {
                         if (b.id !== 'stop-recording-btn') {
-                            b.disabled = false; b.style.opacity = 1;
+                            b.disabled = false;
+                            b.style.opacity = 1;
                         }
                     });
                     document.getElementById('record-once-btn').textContent = 'Record Once';
@@ -949,7 +998,10 @@
                     body: JSON.stringify(data)
                 });
                 if (r.ok) {
-                    showToast(type === 'series' ? `Series recording set for "${title}"` : `Recording set for "${title}"`, 'success');
+                    showToast(
+                        type === 'series' ? `Series recording set for "${title}"` : `Recording set for "${title}"`,
+                        'success'
+                    );
                     closeDetails();
                     loadGuide(); // Refresh to show scheduled status
                 } else {
@@ -984,8 +1036,10 @@
             const r = await fetch('/api/recordings');
             const data = await r.json();
             const list = document.getElementById('recordings-list');
-            list.innerHTML = data.length ? '' : '<p style="text-align:center; color:var(--text-dim);">No recordings found.</p>';
-            data.forEach(rec => {
+            list.innerHTML = data.length
+                ? ''
+                : '<p style="text-align:center; color:var(--text-dim);">No recordings found.</p>';
+            data.forEach((rec) => {
                 const card = document.createElement('div');
                 card.className = 'list-card';
                 const isActive = rec.status === 'recording';
@@ -1013,8 +1067,10 @@
             const r = await fetch('/api/timers');
             const data = await r.json();
             const list = document.getElementById('schedule-list');
-            list.innerHTML = data.length ? '' : '<p style="text-align:center; color:var(--text-dim);">No scheduled timers.</p>';
-            data.forEach(t => {
+            list.innerHTML = data.length
+                ? ''
+                : '<p style="text-align:center; color:var(--text-dim);">No scheduled timers.</p>';
+            data.forEach((t) => {
                 const card = document.createElement('div');
                 card.className = 'list-card';
                 const isOver = t.end_time && Date.now() > t.end_time;
@@ -1027,12 +1083,12 @@
                             <span>${t.channel_num ? 'Channel ' + t.channel_num : 'Any Channel'}</span>
                             ${t.start_time ? `<span>Time: ${new Date(t.start_time).toLocaleString()}</span>` : ''}
                             ${isCompleted ? '<span class="badge" style="background:rgba(34,197,94,0.1); color:#22c55e;">Completed</span>' : ''}
-                            ${(isOver && !isCompleted) ? '<span class="badge" style="background:rgba(239,68,68,0.1); color:#ef4444;">Expired</span>' : ''}
+                            ${isOver && !isCompleted ? '<span class="badge" style="background:rgba(239,68,68,0.1); color:#ef4444;">Expired</span>' : ''}
                         </div>
                     </div>
                     <div style="display:flex; gap:1rem;">
-                        ${(isOver || isCompleted) ? `<button class="btn btn-play" onclick="findAndScheduleNext('${t.title.replace(/'/g, "\\'")}', '${t.channel_num}')">Record Next</button>` : ''}
-                        <button class="btn btn-outline btn-danger" onclick="deleteTimer(${t.id})">${(isOver || isCompleted) ? 'Clear' : 'Cancel'}</button>
+                        ${isOver || isCompleted ? `<button class="btn btn-play" onclick="findAndScheduleNext('${t.title.replace(/'/g, "\\'")}', '${t.channel_num}')">Record Next</button>` : ''}
+                        <button class="btn btn-outline btn-danger" onclick="deleteTimer(${t.id})">${isOver || isCompleted ? 'Clear' : 'Cancel'}</button>
                     </div>
                 `;
                 list.appendChild(card);
@@ -1059,7 +1115,10 @@
             }
             if (nextOccur) {
                 schedule('once', nextOccur.title, nextOccur.chanNum, nextOccur.start, nextOccur.end);
-                showToast(`Found next showing on ${nextOccur.chanNum} at ${new Date(nextOccur.start).toLocaleString()}`, 'success');
+                showToast(
+                    `Found next showing on ${nextOccur.chanNum} at ${new Date(nextOccur.start).toLocaleString()}`,
+                    'success'
+                );
             } else {
                 showToast('No future occurrences found in the guide.', 'error');
             }
@@ -1075,7 +1134,9 @@
                     } else {
                         showToast('Failed to delete recording.', 'error');
                     }
-                } catch (e) { showToast('Error deleting recording.', 'error'); }
+                } catch (e) {
+                    showToast('Error deleting recording.', 'error');
+                }
             }
         }
 
@@ -1089,10 +1150,11 @@
                     } else {
                         showToast('Failed to cancel timer.', 'error');
                     }
-                } catch (e) { showToast('Error cancelling timer.', 'error'); }
+                } catch (e) {
+                    showToast('Error cancelling timer.', 'error');
+                }
             }
         }
-
 
         function playLive(num, name, title) {
             // Use HLS for live streaming to allow seeking/buffering
@@ -1146,7 +1208,7 @@
                     hlsPlayer = new Hls({
                         debug: false,
                         enableWorker: true,
-                        lowLatencyMode: isLiveStream,
+                        lowLatencyMode: isLiveStream
                     });
                     hlsPlayer.loadSource(url);
                     hlsPlayer.attachMedia(video);
@@ -1171,8 +1233,14 @@
 
             // Fallback/Legacy Logic ...
             const lowerUrl = url.toLowerCase();
-            const isExplicitNative = lowerUrl.includes('.mkv') || lowerUrl.includes('.mp4') || lowerUrl.includes('/mkv') || lowerUrl.includes('/mp4');
-            const useMpegts = lowerUrl.includes('.ts') || ((url.includes('/stream/') || url.includes('/api/play/')) && !isExplicitNative);
+            const isExplicitNative =
+                lowerUrl.includes('.mkv') ||
+                lowerUrl.includes('.mp4') ||
+                lowerUrl.includes('/mkv') ||
+                lowerUrl.includes('/mp4');
+            const useMpegts =
+                lowerUrl.includes('.ts') ||
+                ((url.includes('/stream/') || url.includes('/api/play/')) && !isExplicitNative);
 
             if (useMpegts && window.mpegts && mpegts.getFeatureList().mseLivePlayback) {
                 try {
@@ -1180,24 +1248,30 @@
                     statusBox.textContent = isLiveStream ? 'Starting live stream...' : 'Buffering...';
 
                     const absoluteUrl = new URL(url, window.location.origin).href;
-                    tsPlayer = mpegts.createPlayer({
-                        type: 'mpegts',
-                        isLive: isLiveStream,
-                        url: absoluteUrl + (isLiveStream ? '?t=' + Date.now() : '')
-                    }, {
-                        enableStashBuffer: false,
-                        stashInitialSize: isLiveStream ? 32 : 128,
-                        autoCleanupSourceBuffer: true,
-                        enableWorker: false,
-                        forceAudioAndVideoDRC: true
-                    });
+                    tsPlayer = mpegts.createPlayer(
+                        {
+                            type: 'mpegts',
+                            isLive: isLiveStream,
+                            url: absoluteUrl + (isLiveStream ? '?t=' + Date.now() : '')
+                        },
+                        {
+                            enableStashBuffer: false,
+                            stashInitialSize: isLiveStream ? 32 : 128,
+                            autoCleanupSourceBuffer: true,
+                            enableWorker: false,
+                            forceAudioAndVideoDRC: true
+                        }
+                    );
 
                     tsPlayer.on(mpegts.Events.ERROR, (type, detail, info) => {
                         console.error('[DVR Player Error]', type, detail, info);
                         // Use setTimeout to skip out of the current mpegts call stack
                         setTimeout(() => {
                             if (!tsPlayer) return;
-                            if (detail === mpegts.ErrorDetails.MEDIA_MSE_ERROR || detail === mpegts.ErrorDetails.MEDIA_FORMAT_ERROR) {
+                            if (
+                                detail === mpegts.ErrorDetails.MEDIA_MSE_ERROR ||
+                                detail === mpegts.ErrorDetails.MEDIA_FORMAT_ERROR
+                            ) {
                                 console.warn('MPEG-TS/MSE Error detected, attempting native fallback...');
                                 try {
                                     const oldUrl = tsPlayer.url;
@@ -1207,7 +1281,7 @@
                                     tsPlayer.destroy();
                                     tsPlayer = null;
                                     video.src = url;
-                                    video.play().catch(e => { });
+                                    video.play().catch((e) => { });
                                 } catch (e) { }
                             }
                         }, 0);
@@ -1220,14 +1294,14 @@
                     setTimeout(() => {
                         if (tsPlayer && tsPlayer.mediaElement) {
                             document.getElementById('v-status').textContent = '';
-                            tsPlayer.play().catch(e => {
+                            tsPlayer.play().catch((e) => {
                                 console.warn('Mpegts play failed, trying native...', e);
                                 if (tsPlayer) {
                                     tsPlayer.destroy();
                                     tsPlayer = null;
                                 }
                                 video.src = url;
-                                video.play().catch(err => { });
+                                video.play().catch((err) => { });
                             });
                         }
                     }, bootDelay);
@@ -1235,13 +1309,13 @@
                     console.error('Failed to init mpegts player:', e);
                     statusBox.textContent = 'MPEG-TS not supported by your browser.';
                     video.src = url;
-                    video.play().catch(err => { });
+                    video.play().catch((err) => { });
                 }
             } else {
                 const statusBox = document.getElementById('v-status');
                 statusBox.textContent = 'Playing via native player...';
                 video.src = url;
-                video.play().catch(e => {
+                video.play().catch((e) => {
                     console.error('Native playback failed:', e);
                     statusBox.textContent = 'Error: Your browser does not support this video format natively.';
                 });
@@ -1261,29 +1335,40 @@
                 tsPlayer = null;
             }
             video.pause();
-            video.src = "";
-            try { video.load(); } catch (e) { }
+            video.src = '';
+            try {
+                video.load();
+            } catch (e) { }
             document.getElementById('player-overlay').style.display = 'none';
             document.body.style.overflow = 'auto';
             if (!isPopState && window.location.hash === '#player') history.back();
         }
 
-        window.addEventListener('popstate', () => { if (document.getElementById('player-overlay').style.display === 'flex') closePlayer(true); });
-        window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closePlayer(); closeDetails(); } });
+        window.addEventListener('popstate', () => {
+            if (document.getElementById('player-overlay').style.display === 'flex') closePlayer(true);
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePlayer();
+                closeDetails();
+            }
+        });
 
         function copy(path) {
             const url = window.location.origin + path;
             navigator.clipboard.writeText(url).then(() => alert('URL Copied!'));
         }
 
-
         loadGuide();
         setInterval(updateNowMarker, 60000);
         updateNowMarker();
 
-        fetch('/api/version').then(r => r.json()).then(d => {
-            document.getElementById('app-version').textContent = d.version;
-        }).catch(e => console.log('Version check failed:', e));
+        fetch('/api/version')
+            .then((r) => r.json())
+            .then((d) => {
+                document.getElementById('app-version').textContent = d.version;
+            })
+            .catch((e) => console.log('Version check failed:', e));
     </script>
 </body>
 

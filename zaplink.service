@@ -1,5 +1,5 @@
 [Unit]
-Description=Express M3U Tuner Service
+Description=ZapLink Service
 After=network.target
 
 [Service]
@@ -11,7 +11,7 @@ ExecStart=/usr/bin/node index.js
 Restart=always
 
 # Transcoding mode: none (direct copy), soft, qsv, nvenc, vaapi
-Environment=TRANSCODE_MODE=none
+Environment=TRANSCODE_MODE=qsv
 Environment=TRANSCODE_CODEC=h264
 Environment=ENABLE_EPG=true
 

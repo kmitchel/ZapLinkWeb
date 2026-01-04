@@ -1,0 +1,10 @@
+node_modules
+recordings
+*.ts
+*.m3u
+*.xml
+*.json
+!package.json
+!package-lock.json
+!.eslintrc.json
+!.prettierrc

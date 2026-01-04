@@ -18,7 +18,6 @@ if (fs.existsSync(LOGOS_JSON)) {
 
         const testChan = { number: '12.1', name: 'WXYZ' };
         console.log(`Match for 12.1:`, Channels.matchIcon(logos, testChan));
-
     } catch (e) {
         console.error('Error reading/parsing:', e);
     }

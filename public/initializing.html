@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>System Initializing</title>
+        <meta http-equiv="refresh" content="10" />
+        <style>
+            body {
+                background: #020617;
+                color: #f8fafc;
+                font-family:
+                    ui-sans-serif,
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    'Segoe UI',
+                    Roboto,
+                    'Helvetica Neue',
+                    Arial,
+                    sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                text-align: center;
+            }
+            .container {
+                max-width: 600px;
+                padding: 2rem;
+            }
+            .loader {
+                border: 4px solid rgba(255, 255, 255, 0.1);
+                border-top: 4px solid #38bdf8;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 2rem;
+            }
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+            h1 {
+                font-weight: 700;
+                font-size: 2rem;
+                margin: 0 0 1rem;
+                color: #fff;
+                letter-spacing: -0.025em;
+            }
+            p {
+                color: #94a3b8;
+                font-size: 1.1rem;
+                line-height: 1.6;
+            }
+            .version {
+                position: fixed;
+                bottom: 2rem;
+                left: 0;
+                width: 100%;
+                font-size: 0.875rem;
+                color: #475569;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            }
+            .status-badge {
+                display: inline-block;
+                background: rgba(56, 189, 248, 0.1);
+                color: #38bdf8;
+                padding: 0.25rem 0.75rem;
+                border-radius: 9999px;
+                font-size: 0.875rem;
+                font-weight: 600;
+                margin-bottom: 1.5rem;
+                border: 1px solid rgba(56, 189, 248, 0.2);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="status-badge">System Status</div>
+            <div class="loader"></div>
+            <h1>Signal Acquisition in Progress</h1>
+            <p>
+                We're performing a deep EPG scan across all tuners to build your guide. The system needs to lock onto
+                each frequency to download the latest program data.
+            </p>
+            <p style="font-size: 0.95rem; margin-top: 1rem; color: #64748b">
+                This process usually takes about 60-90 seconds.
+            </p>
+        </div>
+        <div class="version" id="version-display">Loading version...</div>
+
+        <script>
+            // Use fetch to get version dynamically if possible, or fallback
+            // For now, we'll let the backend inject it or just show generic
+            const urlParams = new URLSearchParams(window.location.search);
+            const version = urlParams.get('v');
+            if (version) {
+                document.getElementById('version-display').textContent = version;
+            }
+        </script>
+    </body>
+</html>

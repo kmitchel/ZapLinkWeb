@@ -1,17 +1,25 @@
 const express = require('express');
+const path = require('path');
 const { execSync } = require('child_process');
-const { PORT, ENABLE_EPG } = require('./lib/config');
+const http = require('http');
+const { PORT: CONFIG_PORT, ENABLE_EPG } = require('./lib/config');
 const { dbExists } = require('./lib/db');
 const { TUNERS } = require('./lib/tuner');
 const Channels = require('./lib/channels');
 const EPG = require('./lib/epg');
 const DVR = require('./lib/dvr');
 const { setupRoutes } = require('./lib/routes');
-const { debugLog } = require('./lib/utils');
+const logger = require('./lib/logger');
+const wsManager = require('./lib/websocket');
 const { RECORDINGS_DIR } = require('./lib/config');
 
 const app = express();
+const server = http.createServer(app);
+const PORT = process.env.PORT || CONFIG_PORT;
 app.use(express.json());
+
+// Initialize WS
+wsManager.init(server);
 
 // Initialize DVR
 DVR.init();
@@ -23,41 +31,25 @@ Channels.downloadImages();
 // Get build version (count + short hash)
 let buildVersion = 'v1.0.0';
 try {
-    const count = execSync('git rev-list --count HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
-    const hash = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    const count = execSync('git rev-list --count HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+        .toString()
+        .trim();
+    const hash = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+        .toString()
+        .trim();
     buildVersion = `v1.0.0 (Build ${count}-${hash})`;
-} catch (e) {
-    debugLog('Could not determine build version from git');
+} catch {
+    logger.warn('Could not determine build version from git');
 }
 
 // Block all requests until EPG scan is complete
 app.use((req, res, next) => {
     if (!EPG.isInitialScanDone) {
         res.set('Retry-After', '30');
-        return res.status(503).send(`
-            <html>
-                <head>
-                    <title>System Initializing</title>
-                    <meta http-equiv="refresh" content="10">
-                    <style>
-                        body { background: #020617; color: #f8fafc; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-                        .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #38bdf8; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 2rem; }
-                        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-                        h1 { font-weight: 700; font-size: 2rem; margin: 0 0 1rem; color: #fff; }
-                        p { color: #94a3b8; font-size: 1.1rem; }
-                        .version { position: fixed; bottom: 1rem; left: 0; width: 100%; font-size: 0.8rem; color: #475569; }
-                    </style>
-                </head>
-                <body>
-                    <div>
-                        <div class="loader"></div>
-                        <h1>Signal Acquisition in Progress</h1>
-                        <p>Performing a deep EPG scan across all tuners to build your guide.<br>The dashboard will load automatically in a moment.</p>
-                    </div>
-                    <div class="version">${buildVersion}</div>
-                </body>
-            </html>
-        `);
+        // Serve the static HTML file
+        return res.status(503).sendFile('initializing.html', {
+            root: path.join(__dirname, 'public')
+        });
     }
     next();
 });
@@ -75,32 +67,45 @@ if (ENABLE_EPG) {
 
     // Priority: Initial grab on startup ONLY if database is missing
     if (!dbExists) {
-        console.log('Database not found, performing initial deep EPG scan...');
+        logger.info('Database not found, performing initial deep EPG scan...');
         // Small delay to ensure tuners are ready
         // Deep scan (30s per mux)
         setTimeout(() => EPG.grab(30000), 2000);
     } else {
         // If DB exists, we are ready immediately. Periodic background scan will update data later.
-        console.log('Database found, skipping initial EPG scan.');
+        logger.info('Database found, skipping initial EPG scan.');
         EPG.isInitialScanDone = true;
     }
 } else {
-    console.log('EPG scanning is disabled.');
+    logger.info('EPG scanning is disabled.');
     EPG.isInitialScanDone = true;
 }
 
-app.listen(PORT, () => {
-    console.log(`Tuner app (Build ${buildVersion}) listening at http://localhost:${PORT}`);
+server.listen(PORT, () => {
+    logger.info(`ZapLink (Build ${buildVersion}) listening at http://localhost:${PORT}`);
 });
 
 // Global Cleanup on App Exit
+/* eslint-disable n/no-process-exit */
 function cleanExit() {
-    console.log('\nApp stopping, ensuring all tuners are released...');
-    TUNERS.forEach(tuner => {
+    logger.info('\nApp stopping, ensuring all tuners are released...');
+    TUNERS.forEach((tuner) => {
         if (tuner.inUse && tuner.processes) {
-            console.log(`Killing processes for Tuner ${tuner.id}`);
-            if (tuner.processes.zap) try { tuner.processes.zap.kill('SIGKILL'); } catch (e) { }
-            if (tuner.processes.ffmpeg) try { tuner.processes.ffmpeg.kill('SIGKILL'); } catch (e) { }
+            logger.info(`Killing processes for Tuner ${tuner.id}`);
+            if (tuner.processes.zap) {
+                try {
+                    tuner.processes.zap.kill('SIGKILL');
+                } catch {
+                    /* Ignore error */
+                }
+            }
+            if (tuner.processes.ffmpeg) {
+                try {
+                    tuner.processes.ffmpeg.kill('SIGKILL');
+                } catch {
+                    /* Ignore */
+                }
+            }
         }
     });
     process.exit();
