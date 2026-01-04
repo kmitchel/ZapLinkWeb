@@ -875,9 +875,9 @@
         async function deleteTimer(id) { if (confirm('Cancel this timer?')) { await fetch('/api/timers/' + id, { method: 'DELETE' }); loadSchedule(); } }
 
         function playLive(num, name, title) {
-            // Dashboard player always uses the most stable TS + Copy combination
-            // This ignores the 'Export Config' dropdowns which are for external apps
-            launchPlayer(`/stream/${encodeURIComponent(num)}/ts/copy`, `${num} ${name} - ${title}`, true);
+            // Updated: Using H.264/MP4 for live streams as requested
+            // This bypasses mpegts.js and uses the browser's native player
+            launchPlayer(`/stream/${encodeURIComponent(num)}/mp4/h264`, `${num} ${name} - ${title}`, true);
         }
 
         function playFile(url, title, isRecording = false) {
