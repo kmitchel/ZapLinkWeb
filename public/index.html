@@ -323,15 +323,19 @@
             line-height: 1;
         }
 
-        .now-marker {
+        #global-now-marker {
             position: absolute;
-            top: 0;
+            top: 50px;
+            /* Below time header */
             bottom: 0;
             width: 2px;
             background: var(--accent-color);
-            z-index: 850;
+            z-index: 950;
             pointer-events: none;
             box-shadow: 0 0 10px var(--accent-color);
+            left: var(--channel-width);
+            /* Starts after channel column */
+            will-change: transform;
         }
 
         /* Lists (Recordings/Schedule) */
@@ -538,6 +542,7 @@
             <div class="time-header-wrapper">
                 <div id="time-header" class="time-header"></div>
             </div>
+            <div id="global-now-marker"></div>
             <div id="guide-body" class="guide-body"></div>
         </div>
     </div>
@@ -705,12 +710,12 @@
                 guideBody.appendChild(row);
             });
 
-            updateNowMarker();
-            const wrappers = document.querySelectorAll('.programs-wrapper');
             wrappers.forEach(w => {
                 w.addEventListener('scroll', () => {
-                    document.getElementById('time-header').style.transform = `translateX(-${w.scrollLeft}px)`;
-                    wrappers.forEach(o => { if (o !== w) o.scrollLeft = w.scrollLeft; });
+                    const scrollX = w.scrollLeft;
+                    document.getElementById('time-header').style.transform = `translateX(-${scrollX}px)`;
+                    updateNowMarkerPosition(scrollX);
+                    wrappers.forEach(o => { if (o !== w) o.scrollLeft = scrollX; });
                 });
             });
             const initialScroll = ((Date.now() - startTime) / 3600000) * pixelsPerHour - 200;
@@ -718,15 +723,20 @@
         }
 
         function updateNowMarker() {
-            document.querySelectorAll('.now-marker').forEach(m => m.remove());
+            // Recalculate time, but use current scroll position if known, else 0 (or query a wrapper)
+            const wrapper = document.querySelector('.programs-wrapper');
+            const scrollX = wrapper ? wrapper.scrollLeft : 0;
+            updateNowMarkerPosition(scrollX);
+        }
+
+        function updateNowMarkerPosition(scrollX) {
+            const marker = document.getElementById('global-now-marker');
+            if (!marker) return;
             const now = Date.now();
-            const nowLeft = ((now - startTime) / 3600000) * pixelsPerHour;
-            document.querySelectorAll('.programs-grid').forEach(grid => {
-                const m = document.createElement('div');
-                m.className = 'now-marker';
-                m.style.left = `${nowLeft}px`;
-                grid.appendChild(m);
-            });
+            const nowDist = ((now - startTime) / 3600000) * pixelsPerHour;
+            // The marker is absolutely positioned at left:200px.
+            // We translate it right by the time distance, and left by the scroll amount.
+            marker.style.transform = `translateX(${nowDist - scrollX}px)`;
         }
 
         let clickTimer = null;
