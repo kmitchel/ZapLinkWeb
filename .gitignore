@@ -11,6 +11,7 @@ public/logos/
 public/hls/
 recordings/
 public/images/
+!public/images/zaplink.png
 index.js.bak
 pwned_permissions
 test_logos.js

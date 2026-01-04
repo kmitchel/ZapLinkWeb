@@ -267,12 +267,39 @@ The open standard for Linux. Useful if QSV isn't working or for AMD GPUs.
 
 ## 🔗 Endpoints
 
-> [!WARNING]
-> **Breaking Change**: The M3U playlist endpoint has been renamed to `/playlist.m3u` to better reflect its content. Please update your tuner configurations in Jellyfin/threadfin accordingly.
+ZapLink provides several endpoints for both media players and programmatic access via a JSON API.
 
-- **Lineup**: `http://localhost:3000/playlist.m3u`
-- **EPG**: `http://localhost:3000/xmltv.xml`
-- **Stream**: `http://localhost:3000/stream/:channelNum`
+### 📺 Media Endpoints
+
+| Endpoint | Description | Parameters |
+| :--- | :--- | :--- |
+| `/playlist.m3u` | **M3U Playlist** for Jellyfin/VLC. | `f`: format (ts, mp4, mkv)<br>`c`: codec (copy, h264, h265, av1) |
+| `/xmltv.xml` | **XMLTV Guide** data. | None |
+| `/stream/:channel` | **Live Stream** a channel. | **Path**: `/:format/:codec`<br>**Query**: `?f=...&c=...` |
+
+**Stream Example**: `http://localhost:3000/stream/5.1/mp4/h264`
+
+### 🛠️ JSON API
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/guide` | `GET` | Returns full channel list with 12h of program data. |
+| `/api/now-playing`| `GET` | Quick snapshot of what is currently on every channel. |
+| `/api/timers` | `GET` | List all scheduled recordings (once or series). |
+| `/api/timers` | `POST` | Schedule a recording. |
+| `/api/recordings` | `GET` | List all completed and active recordings. |
+| `/api/play/:id` | `GET` | Stream a recording with optional transcoding. |
+| `/api/version` | `GET` | Returns the current build hash and version. |
+
+### 📡 WebSocket API
+
+The server broadcasts real-time updates to all connected clients.
+
+| Event Type | Description | Data Fields |
+| :--- | :--- | :--- |
+| `tuner_status` | Status of hardware tuners. | `tunerId`, `status` (acquired, released, scanning) |
+| `epg_scan_progress` | Progress of background EPG scans. | `currentMux`, `totalMuxes`, `percent` |
+| `recording_status` | Updates on DVR recording jobs. | `recId`, `status` (starting, recording, finished, failed) |
 
 ## 🧠 Technical Details
 

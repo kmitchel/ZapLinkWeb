@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=jellyfin
 Group=jellyfin
-WorkingDirectory=/opt/jellyfin-tuner
+WorkingDirectory=/opt/zaplink
 ExecStart=/usr/bin/node index.js
 Restart=always
 
