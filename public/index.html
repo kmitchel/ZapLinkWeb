@@ -307,6 +307,27 @@
             display: block;
         }
 
+        .fav-star {
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.2);
+            transition: all 0.2s;
+            user-select: none;
+            padding: 5px;
+            margin-right: -10px;
+            z-index: 10;
+        }
+
+        .fav-star:hover {
+            transform: scale(1.2);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .fav-star.active {
+            color: #fbbf24;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        }
+
         .channel-num {
             font-size: 0.75rem;
             color: var(--text-dim);
@@ -944,11 +965,36 @@
             }
 
             guideBody.innerHTML = '';
-            guideData.forEach((chan) => {
+
+            const favorites = JSON.parse(localStorage.getItem('zaplink_favorites') || '[]');
+
+            // Custom sort function for numerical VCN
+            const vcnSort = (a, b) => {
+                const partsA = a.number.split(/[.-]/).map(Number);
+                const partsB = b.number.split(/[.-]/).map(Number);
+                for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+                    const numA = partsA[i] || 0;
+                    const numB = partsB[i] || 0;
+                    if (numA !== numB) return numA - numB;
+                }
+                return 0;
+            };
+
+            const sortedChannels = [...guideData].sort((a, b) => {
+                const isFavA = favorites.includes(a.number);
+                const isFavB = favorites.includes(b.number);
+                if (isFavA && !isFavB) return -1;
+                if (!isFavA && isFavB) return 1;
+                return vcnSort(a, b);
+            });
+
+            sortedChannels.forEach((chan) => {
+                const isFav = favorites.includes(chan.number);
                 const row = document.createElement('div');
                 row.className = 'guide-row';
                 row.innerHTML = `
                     <div class="channel-col" style="cursor: pointer" onclick="openChannelDetail('${chan.number}', '${chan.name.replace(/'/g, "\\'")}', '${chan.icon || ''}')">
+                        <div class="fav-star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${chan.number}', event)">★</div>
                         <div class="channel-logo">${chan.icon ? `<img src="${chan.icon}">` : chan.name.charAt(0)}</div>
                         <div class="channel-info"><span class="channel-name">${chan.name}</span><span class="channel-num">VC ${chan.number}</span></div>
                     </div>
@@ -1111,6 +1157,18 @@
         function closeDetails() {
             if (clickTimer) clearTimeout(clickTimer);
             document.getElementById('details-panel').style.display = 'none';
+        }
+
+        function toggleFavorite(chanNum, event) {
+            event.stopPropagation();
+            let favorites = JSON.parse(localStorage.getItem('zaplink_favorites') || '[]');
+            if (favorites.includes(chanNum)) {
+                favorites = favorites.filter((f) => f !== chanNum);
+            } else {
+                favorites.push(chanNum);
+            }
+            localStorage.setItem('zaplink_favorites', JSON.stringify(favorites));
+            renderGuide();
         }
 
         async function openChannelDetail(num, name, icon) {
