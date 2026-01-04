@@ -893,16 +893,17 @@
 
             if (useMpegts && window.mpegts && mpegts.getFeatureList().mseLivePlayback) {
                 try {
+                    const absoluteUrl = new URL(url, window.location.origin).href;
                     tsPlayer = mpegts.createPlayer({
                         type: 'mpegts',
                         isLive: isLiveStream,
-                        url: url + (isLiveStream ? '?t=' + Date.now() : '')
+                        url: absoluteUrl + (isLiveStream ? '?t=' + Date.now() : '')
                     }, {
-                        enableStashBuffer: false, // Cleaner for TS seeking and broadcast gaps
-                        stashInitialSize: 128,
+                        enableStashBuffer: false,
+                        stashInitialSize: 64, // Smaller for faster start
                         autoCleanupSourceBuffer: true,
-                        enableWorker: true, // Use a worker to keep UI responsive
-                        forceAudioAndVideoDRC: true // Handle volume/codec shifts better
+                        enableWorker: true,
+                        forceAudioAndVideoDRC: true
                     });
 
                     tsPlayer.on(mpegts.Events.ERROR, (type, detail, info) => {
