@@ -6,7 +6,8 @@
     "scripts": {
         "start": "node index.js",
         "lint": "eslint .",
-        "format": "prettier --write ."
+        "format": "prettier --write .",
+        "screenshot": "node scripts/capture.js"
     },
     "keywords": [],
     "author": "",
@@ -22,6 +23,7 @@
         "eslint": "^9.39.2",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-n": "^17.23.1",
-        "prettier": "^3.7.4"
+        "prettier": "^3.7.4",
+        "puppeteer": "^24.34.0"
     }
 }

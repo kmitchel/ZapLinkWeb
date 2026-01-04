@@ -16,6 +16,16 @@ A high-performance ExpressJS server for turning your USB DVB/ATSC tuners into a 
 - **Real-time Updates**: WebSocket integration for live feedback on scans, tuner status, and recordings.
 - **Round-Robin Preemption**: Distributes tuner load and supports preemption logic.
 
+## 📸 Dashboard Preview
+
+| **Main Guide** | **Favorites Pinned** |
+|:---:|:---:|
+| <img src="screenshots/01_dashboard.png" width="400" /> | <img src="screenshots/02_favorites.png" width="400" /> |
+
+| **Channel Detail (7-Day)** | **Program Details** |
+|:---:|:---:|
+| <img src="screenshots/03_channel_detail.png" width="400" /> | <img src="screenshots/04_program_detail.png" width="400" /> |
+
 ## 🛠️ Prerequisites
 
 - **Node.js**: v18 or higher.
