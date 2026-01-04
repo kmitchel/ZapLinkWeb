@@ -710,6 +710,7 @@
                 guideBody.appendChild(row);
             });
 
+            const wrappers = document.querySelectorAll('.programs-wrapper');
             wrappers.forEach(w => {
                 w.addEventListener('scroll', () => {
                     const scrollX = w.scrollLeft;
