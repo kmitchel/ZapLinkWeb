@@ -525,29 +525,6 @@
             <div class="nav-link" onclick="showPage('recordings')">Recordings</div>
             <div class="nav-link" onclick="showPage('schedule')">Schedule</div>
         </nav>
-        <div class="controls"
-            style="background: rgba(255,255,255,0.03); padding: 0.5rem 1rem; border-radius: 0.75rem; border: 1px solid var(--border-color);">
-            <div style="display:flex; flex-direction:column; gap:0.25rem;">
-                <span style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Export
-                    Config</span>
-                <div style="display:flex; gap:0.5rem;">
-                    <select id="format-select"
-                        style="background:transparent; border:none; color:var(--text-primary); cursor:pointer;">
-                        <option value="ts" selected>MPEG-TS</option>
-                        <option value="mkv">Matroska (MKV)</option>
-                        <option value="mp4">Fragmented MP4</option>
-                    </select>
-                    <select id="codec-select"
-                        style="background:transparent; border:none; color:var(--text-primary); cursor:pointer;">
-                        <option value="copy" selected>Direct (Copy)</option>
-                        <option value="h264">H.264 (Transcode)</option>
-                        <option value="h265">H.265 (Transcode)</option>
-                        <option value="av1">AV1 (Transcode)</option>
-                    </select>
-                </div>
-            </div>
-            <a href="/playlist.m3u" class="btn btn-outline" id="m3u-btn" style="height:fit-content;">M3U</a>
-        </div>
     </header>
 
     <!-- Guide Page -->
@@ -713,9 +690,7 @@
 
                 document.getElementById('watch-now-btn').onclick = () => playLive(num, name, p.title);
                 document.getElementById('copy-url-btn').onclick = () => {
-                    const fVal = document.getElementById('format-select').value;
-                    const cVal = document.getElementById('codec-select').value;
-                    copy(`/stream/${encodeURIComponent(num)}/${fVal}/${cVal}`);
+                    copy(`/stream/${encodeURIComponent(num)}/mp4/h264`);
                 };
 
                 document.getElementById('record-once-btn').onclick = () => schedule('once', p.title, num, p.start, p.end);
@@ -1011,14 +986,6 @@
             navigator.clipboard.writeText(url).then(() => alert('URL Copied!'));
         }
 
-        function updateM3ULink() {
-            const f = document.getElementById('format-select').value;
-            const c = document.getElementById('codec-select').value;
-            document.getElementById('m3u-btn').href = `/playlist.m3u?f=${f}&c=${c}`;
-        }
-        document.getElementById('format-select').addEventListener('change', updateM3ULink);
-        document.getElementById('codec-select').addEventListener('change', updateM3ULink);
-        updateM3ULink();
 
         loadGuide();
         setInterval(updateNowMarker, 60000);
