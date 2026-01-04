@@ -524,6 +524,8 @@
             <div class="nav-link active" onclick="showPage('guide')">Guide</div>
             <div class="nav-link" onclick="showPage('recordings')">Recordings</div>
             <div class="nav-link" onclick="showPage('schedule')">Schedule</div>
+            <div class="nav-link" onclick="showPage('help')" style="opacity: 0.6; font-size: 0.8em; margin-left: 1rem;">
+                Help</div>
         </nav>
     </header>
 
@@ -545,6 +547,48 @@
     <!-- Schedule Page -->
     <div id="page-schedule" class="page">
         <div class="list-container" id="schedule-list"></div>
+    </div>
+
+    <!-- Help Page -->
+    <div id="page-help" class="page">
+        <div class="list-container"
+            style="color: var(--text-primary); max-width: 800px; margin: 0 auto; line-height: 1.6;">
+            <h2>Streaming Documentation</h2>
+
+            <div class="list-card" style="margin-bottom: 2rem;">
+                <div class="list-info" style="display: block;">
+                    <h3 style="margin-bottom: 1rem; color: var(--accent-color);">Live TV Streams</h3>
+                    <p>Construct URLs using the pattern: <code>/stream/{ChannelNumber}/{Format}/{Codec}</code></p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
+                        <li><strong>Format:</strong> <code>ts</code> (MPEG-TS), <code>mp4</code> (Fragmented MP4),
+                            <code>mkv</code> (Matroska)</li>
+                        <li><strong>Codec:</strong> <code>copy</code> (Direct Stream), <code>h264</code>,
+                            <code>h265</code>, <code>av1</code></li>
+                    </ul>
+                    <div
+                        style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.9em; border: 1px solid var(--border-color);">
+                        http://{ServerIP}:3000/stream/5.1/mp4/h264<br>
+                        http://{ServerIP}:3000/stream/15.2/ts/copy
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-card" style="margin-bottom: 2rem;">
+                <div class="list-info" style="display: block;">
+                    <h3 style="margin-bottom: 1rem; color: var(--accent-color);">M3U Playlist</h3>
+                    <p>Generate a playlist for your media player using query parameters.</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
+                        <li><strong>f (Format):</strong> <code>ts</code>, <code>mp4</code>, <code>mkv</code></li>
+                        <li><strong>c (Codec):</strong> <code>copy</code>, <code>h264</code>, <code>h265</code>,
+                            <code>av1</code></li>
+                    </ul>
+                    <div
+                        style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.9em; border: 1px solid var(--border-color);">
+                        http://{ServerIP}:3000/playlist.m3u?f=mp4&c=h264
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Details Panel -->
