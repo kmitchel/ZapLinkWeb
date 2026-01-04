@@ -297,4 +297,6 @@ ISC
 
 ## 🧪 Status
 
-This project is currently under active development. The `experimental` branch contains the latest features including MP4 streaming and on-the-fly transcoding.
+This project is currently under active development. The `experimental` branch contains the latest features including:
+- **Native H.264/MP4 Streaming**: Live TV and recordings now stream in native MP4 format for maximum browser compatibility.
+- **On-the-fly Transcoding**: Recordings are automatically transcoded from `.ts` to `.mp4` during playback.
