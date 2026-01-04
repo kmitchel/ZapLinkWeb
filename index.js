@@ -86,7 +86,7 @@ if (ENABLE_EPG) {
 }
 
 app.listen(PORT, () => {
-    console.log(`Tuner app (Build ${buildNumber}) listening at http://localhost:${PORT}`);
+    console.log(`Tuner app (Build ${buildVersion}) listening at http://localhost:${PORT}`);
 });
 
 // Global Cleanup on App Exit
