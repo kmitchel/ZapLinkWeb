@@ -308,13 +308,12 @@
         }
 
         .fav-star {
-            font-size: 1.25rem;
+            font-size: 1rem;
             cursor: pointer;
             color: rgba(255, 255, 255, 0.2);
             transition: all 0.2s;
             user-select: none;
-            padding: 5px;
-            margin-right: -10px;
+            padding: 2px;
             z-index: 10;
         }
 
@@ -994,9 +993,14 @@
                 row.className = 'guide-row';
                 row.innerHTML = `
                     <div class="channel-col" style="cursor: pointer" onclick="openChannelDetail('${chan.number}', '${chan.name.replace(/'/g, "\\'")}', '${chan.icon || ''}')">
-                        <div class="fav-star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${chan.number}', event)">★</div>
                         <div class="channel-logo">${chan.icon ? `<img src="${chan.icon}">` : chan.name.charAt(0)}</div>
-                        <div class="channel-info"><span class="channel-name">${chan.name}</span><span class="channel-num">VC ${chan.number}</span></div>
+                        <div class="channel-info" style="flex: 1">
+                            <span class="channel-name">${chan.name}</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center">
+                                <span class="channel-num">VC ${chan.number}</span>
+                                <div class="fav-star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${chan.number}', event)">★</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="programs-wrapper">
                         <div class="programs-grid" style="width: ${12 * pixelsPerHour}px">
