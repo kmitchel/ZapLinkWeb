@@ -160,7 +160,7 @@ function runScanPrompt(scanFile) {
             scan.on('close', (code) => {
                 if (code === 0) {
                     console.log('Scan complete! Saved to channels.conf');
-                    console.log('You may need to restart ZapLink to apply changes.');
+                    console.log('You will need to copy channels.conf and restart ZapLink to apply changes.');
                 } else {
                     console.log('Scan failed.');
                 }

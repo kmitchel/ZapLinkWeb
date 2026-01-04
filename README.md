@@ -61,11 +61,22 @@ sudo apt install v4l-utils ffmpeg nodejs npm sqlite3
     sudo -u zaplink npm install
     ```
 
-4. Place your `channels.conf` in the project root:
+4. **Generate Channel Configuration**:
+
+    We provide an interactive helper script to fetch channel data from RabbitEars and generate a configuration file optimized for US broadcasts.
 
     ```bash
-    # Example generation for ATSC
-    dvbv5-scan us-ATSC-center-frequencies-8VSB > channels.conf
+    sudo -u zaplink npm run scan-channels
+    ```
+
+    Follow the interactive prompts to enter your zip code.
+    > [!WARNING]
+    > **VHF Channels (2-13)**: These lower frequency channels propagate further but often have weaker signal strength on modern "digital" antennas, which are primarily designed for UHF. If scanning takes a very long time or fails, use the option to **skip VHF channels** when prompted.
+
+    Once the scan is complete, move the generated file to `/opt/zaplink/channels.conf`:
+
+    ```bash
+    mv scripts/channels.conf channels.conf
     sudo chown zaplink:zaplink channels.conf
     ```
 
