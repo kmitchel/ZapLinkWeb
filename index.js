@@ -16,6 +16,17 @@ app.use(express.json());
 DVR.init();
 
 // Block all requests until EPG scan is complete
+// Get build version (count + short hash)
+let buildVersion = 'v1.0.0';
+try {
+    const count = execSync('git rev-list --count HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    const hash = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    buildVersion = `v1.0.0 (Build ${count}-${hash})`;
+} catch (e) {
+    debugLog('Could not determine build version from git');
+}
+
+// Block all requests until EPG scan is complete
 app.use((req, res, next) => {
     if (!EPG.isInitialScanDone) {
         res.set('Retry-After', '30');
@@ -30,6 +41,7 @@ app.use((req, res, next) => {
                         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
                         h1 { font-weight: 700; font-size: 2rem; margin: 0 0 1rem; color: #fff; }
                         p { color: #94a3b8; font-size: 1.1rem; }
+                        .version { position: fixed; bottom: 1rem; left: 0; width: 100%; font-size: 0.8rem; color: #475569; }
                     </style>
                 </head>
                 <body>
@@ -38,6 +50,7 @@ app.use((req, res, next) => {
                         <h1>Signal Acquisition in Progress</h1>
                         <p>Performing a deep EPG scan across all tuners to build your guide.<br>The dashboard will load automatically in a moment.</p>
                     </div>
+                    <div class="version">${buildVersion}</div>
                 </body>
             </html>
         `);
@@ -49,16 +62,8 @@ app.use((req, res, next) => {
 app.use(express.static('public'));
 app.use('/recordings', express.static(RECORDINGS_DIR));
 
-// Get build number (git commit count)
-let buildNumber = 'unknown';
-try {
-    buildNumber = execSync('git rev-list --count HEAD').toString().trim();
-} catch (e) {
-    debugLog('Could not determine build number from git');
-}
-
 // Set up routes
-setupRoutes(app, buildNumber);
+setupRoutes(app, buildVersion);
 
 if (ENABLE_EPG) {
     // Schedule EPG grab every 15 minutes with a shorter 15s-per-mux timeout for background updates

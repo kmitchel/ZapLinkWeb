@@ -83,8 +83,9 @@
         #app-version {
             font-size: 0.75rem;
             color: var(--text-dim);
-            font-weight: 400;
-            opacity: 0.8;
+            font-weight: 500;
+            opacity: 0.6;
+            letter-spacing: 0.02em;
         }
 
         .main-nav {
@@ -632,9 +633,12 @@
     <!-- Details Panel -->
     <div id="details-panel">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1rem;">
-            <div>
-                <h3 class="details-title" id="det-title" style="margin:0; font-size:1.4rem;">Program Title</h3>
-                <div class="prog-time" id="det-time" style="margin-top:0.25rem;">12:00 PM - 1:00 PM</div>
+            <div style="display:flex; gap:1rem; align-items:center;">
+                <div id="det-icon" class="channel-logo" style="width:48px; height:48px; border-radius:0.75rem;"></div>
+                <div>
+                    <h3 class="details-title" id="det-title" style="margin:0; font-size:1.4rem;">Program Title</h3>
+                    <div class="prog-time" id="det-time" style="margin-top:0.25rem;">12:00 PM - 1:00 PM</div>
+                </div>
             </div>
             <div class="close-player" onclick="closeDetails()" style="width:32px; height:32px; font-size:1rem;">✕</div>
         </div>
@@ -726,7 +730,7 @@
                     return `
                         <div class="program-tile ${isActive ? 'active' : ''} ${isScheduled} ${isRecording}"
                              style="left: ${left}px; width: ${width - 2}px"
-                             onclick="showDetails('${chan.number}', '${chan.name.replace(/'/g, "\\'")}', ${JSON.stringify(p).replace(/"/g, '&quot;')})"
+                             onclick="showDetails('${chan.number}', '${chan.name.replace(/'/g, "\\'")}', ${JSON.stringify(p).replace(/"/g, '&quot;')}, '${chan.icon || ''}')"
                              ondblclick="playLive('${chan.number}', '${chan.name.replace(/'/g, "\\'")}', '${p.title.replace(/'/g, "\\'")}')">
                                             <div class="tile-content">
                                                 <div class="prog-title">${p.title}</div>
@@ -770,12 +774,16 @@
         }
 
         let clickTimer = null;
-        function showDetails(num, name, p) {
+        function showDetails(num, name, p, icon) {
             if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
             clickTimer = setTimeout(() => {
                 document.getElementById('det-title').textContent = p.title;
                 document.getElementById('det-time').textContent = `${new Date(p.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(p.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
                 document.getElementById('det-desc').textContent = p.description || 'No description.';
+
+                const iconBox = document.getElementById('det-icon');
+                iconBox.innerHTML = icon ? `<img src="${icon}">` : name.charAt(0);
+
                 document.getElementById('details-panel').style.display = 'block';
 
                 document.getElementById('watch-now-btn').onclick = () => playLive(num, name, p.title);
@@ -1082,7 +1090,7 @@
         updateNowMarker();
 
         fetch('/api/version').then(r => r.json()).then(d => {
-            document.getElementById('app-version').textContent = 'v' + d.version;
+            document.getElementById('app-version').textContent = d.version;
         }).catch(e => console.log('Version check failed:', e));
     </script>
 </body>
