@@ -71,7 +71,7 @@ sudo apt install v4l-utils ffmpeg nodejs npm sqlite3
 
     Follow the interactive prompts to enter your zip code.
     > [!WARNING]
-    > **VHF Channels (2-13)**: These lower frequency channels propagate further but often have weaker signal strength on modern "digital" antennas, which are primarily designed for UHF. If scanning takes a very long time or fails, use the option to **skip VHF channels** when prompted.
+    > **VHF Channels (2-13)**: These lower frequency channels propagate further but often have weaker signal strength on modern "digital" antennas (there is nothing modern or digital about an antenna; RF is RF, and a UHF antenna is just a UHF antenna), which are primarily designed for UHF. If scanning takes a very long time or fails, use the option to **skip VHF channels** when prompted.
 
     Once the scan is complete, move the generated file to `/opt/zaplink/channels.conf`:
 
