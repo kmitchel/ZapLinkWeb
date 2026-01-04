@@ -664,10 +664,12 @@
                     <p>Construct URLs using the pattern: <code>/stream/{ChannelNumber}/{Format}/{Codec}</code></p>
                     <ul style="margin: 1rem 0; padding-left: 1.5rem; color: var(--text-secondary);">
                         <li><strong>Format:</strong> <code>ts</code> (MPEG-TS), <code>mp4</code> (Fragmented MP4),
-                            <code>mkv</code> (Matroska)
+                            <code>mkv</code> (Matroska). <em>(Defaults to <code>ts</code> if omitted, or
+                                <code>mkv</code> if codec is <code>av1</code>)</em>
                         </li>
                         <li><strong>Codec:</strong> <code>copy</code> (Direct Stream), <code>h264</code>,
-                            <code>h265</code>, <code>av1</code>
+                            <code>h265</code>, <code>av1</code>. <em>(Defaults to server setting `TRANSCODE_CODEC`,
+                                usually <code>h264</code>)</em>
                         </li>
                     </ul>
                     <div
