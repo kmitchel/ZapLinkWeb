@@ -49,9 +49,6 @@ app.use((req, res, next) => {
 app.use(express.static('public'));
 app.use('/recordings', express.static(RECORDINGS_DIR));
 
-// Set up routes
-setupRoutes(app);
-
 // Get build number (git commit count)
 let buildNumber = 'unknown';
 try {
@@ -59,6 +56,9 @@ try {
 } catch (e) {
     debugLog('Could not determine build number from git');
 }
+
+// Set up routes
+setupRoutes(app, buildNumber);
 
 if (ENABLE_EPG) {
     // Schedule EPG grab every 15 minutes with a shorter 15s-per-mux timeout for background updates
