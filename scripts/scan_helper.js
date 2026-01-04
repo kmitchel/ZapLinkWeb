@@ -128,7 +128,12 @@ function runScanPrompt(scanFile) {
                     // Example: Lock   (0x1f) Signal= -39.00dBm C/N= 32.77dB
                     match = cleanLine.match(/Lock\s+\(0x[\da-f]+\)\s+Signal=\s+([-\d.]+)dBm\s+C\/N=\s+([-\d.]+)dB/);
                     if (match) {
-                        console.log(`🔒 LOCK! Signal: ${match[1]}dBm (SNR: ${match[2]}dB)`);
+                        const snr = parseFloat(match[2]);
+                        let logMsg = `   🔒 LOCK! Signal: ${match[1]}dBm (SNR: ${match[2]}dB)`;
+                        if (snr < 25) {
+                            logMsg += ' ⚠️ Weak Signal';
+                        }
+                        console.log(logMsg);
                         return;
                     }
 
