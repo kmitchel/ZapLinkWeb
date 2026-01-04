@@ -31,15 +31,15 @@ Channels.downloadImages();
 // Get build version (count + short hash)
 let buildVersion = 'v1.0.0';
 try {
-    const count = execSync('git rev-list --count HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+    const count = execSync('git -c safe.directory=/opt/zaplink rev-list --count HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
         .toString()
         .trim();
-    const hash = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+    const hash = execSync('git -c safe.directory=/opt/zaplink rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
         .toString()
         .trim();
     buildVersion = `v1.0.0 (Build ${count}-${hash})`;
-} catch {
-    logger.warn('Could not determine build version from git');
+} catch (e) {
+    logger.warn(`Could not determine build version from git: ${e.message}`);
 }
 
 // Block all requests until EPG scan is complete
