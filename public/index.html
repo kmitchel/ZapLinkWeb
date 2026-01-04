@@ -898,35 +898,50 @@
                         isLive: isLiveStream,
                         url: url + (isLiveStream ? '?t=' + Date.now() : '')
                     }, {
-                        enableStashBuffer: !isLiveStream,
-                        stashInitialSize: isLiveStream ? 128 : 512,
-                        liveBufferLatencyChasing: isLiveStream,
-                        autoCleanupSourceBuffer: true
+                        enableStashBuffer: false, // Cleaner for TS seeking and broadcast gaps
+                        stashInitialSize: 128,
+                        autoCleanupSourceBuffer: true,
+                        enableWorker: true, // Use a worker to keep UI responsive
+                        forceAudioAndVideoDRC: true // Handle volume/codec shifts better
                     });
 
                     tsPlayer.on(mpegts.Events.ERROR, (type, detail, info) => {
                         console.error('[DVR Player Error]', type, detail, info);
-                        if (detail === mpegts.ErrorDetails.MEDIA_MSE_ERROR) {
-                            console.warn('MSE Error detected, falling back to native player...');
-                            closePlayer(true);
-                            video.src = url;
-                            video.play().catch(e => { });
-                        }
+                        // Use setTimeout to skip out of the current mpegts call stack
+                        setTimeout(() => {
+                            if (!tsPlayer) return;
+                            if (detail === mpegts.ErrorDetails.MEDIA_MSE_ERROR || detail === mpegts.ErrorDetails.MEDIA_FORMAT_ERROR) {
+                                console.warn('MPEG-TS/MSE Error detected, attempting native fallback...');
+                                try {
+                                    const oldUrl = tsPlayer.url;
+                                    tsPlayer.pause();
+                                    tsPlayer.unload();
+                                    tsPlayer.detachMediaElement();
+                                    tsPlayer.destroy();
+                                    tsPlayer = null;
+                                    video.src = url;
+                                    video.play().catch(e => { });
+                                } catch (e) { }
+                            }
+                        }, 0);
                     });
 
                     tsPlayer.attachMediaElement(video);
                     tsPlayer.load();
 
-                    // Delay play slightly to allow MSE buffer to stabilize
                     setTimeout(() => {
                         if (tsPlayer && tsPlayer.mediaElement) {
                             tsPlayer.play().catch(e => {
                                 console.warn('Mpegts play failed, trying native...', e);
+                                if (tsPlayer) {
+                                    tsPlayer.destroy();
+                                    tsPlayer = null;
+                                }
                                 video.src = url;
                                 video.play().catch(err => { });
                             });
                         }
-                    }, 200);
+                    }, 300);
                 } catch (e) {
                     console.error('Failed to init mpegts player:', e);
                     video.src = url;
