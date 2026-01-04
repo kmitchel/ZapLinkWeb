@@ -39,16 +39,16 @@ sudo apt install v4l-utils ffmpeg nodejs npm sqlite3
     cd /opt/zaplink
     ```
 
-2. Set permissions for the `jellyfin` user:
+2. Set permissions for the `zaplink` user:
 
     ```bash
-    sudo chown -R jellyfin:jellyfin /opt/zaplink
+    sudo chown -R zaplink:zaplink /opt/zaplink
     ```
 
 3. Install dependencies:
 
     ```bash
-    sudo -u jellyfin npm install
+    sudo -u zaplink npm install
     ```
 
 4. Place your `channels.conf` in the project root:
@@ -56,7 +56,7 @@ sudo apt install v4l-utils ffmpeg nodejs npm sqlite3
     ```bash
     # Example generation for ATSC
     dvbv5-scan us-ATSC-center-frequencies-8VSB > channels.conf
-    sudo chown jellyfin:jellyfin channels.conf
+    sudo chown zaplink:zaplink channels.conf
     ```
 
 5. **Channel Icons (Optional)**:
@@ -73,23 +73,26 @@ sudo apt install v4l-utils ffmpeg nodejs npm sqlite3
     ```
     The app will automatically include these in the M3U (`tvg-logo`) and XMLTV (`<icon src="..." />`) outputs.
     ```bash
-    sudo chown jellyfin:jellyfin logos.json
+    sudo chown zaplink:zaplink logos.json
     ```
 
 ## ⚙️ Systemd Service & Permissions
 
-Running the application with `sudo` is discouraged for security reasons. Follow these steps to run the tuner as the `jellyfin` user.
+Running the application with `sudo` is discouraged for security reasons. Follow these steps to run the tuner as the `zaplink` user.
 
 ### 1. Configure User Permissions
 
-The `jellyfin` user needs access to the application files, the DVB hardware, and the Intel GPU (for QSV).
+The `zaplink` user needs access to the application files, the DVB hardware, and the Intel GPU (for QSV).
 
 ```bash
-# Set ownership of the application directory
-sudo chown -R jellyfin:jellyfin /opt/zaplink
+# Create the zaplink system user
+sudo useradd -r -s /usr/sbin/nologin zaplink
 
-# Add jellyfin to the video and render groups for hardware access
-sudo usermod -aG video,render jellyfin
+# Set ownership of the application directory
+sudo chown -R zaplink:zaplink /opt/zaplink
+
+# Add zaplink to necessary groups (video, render, and tvheadend)
+sudo usermod -aG video,render,tvheadend zaplink
 ```
 
 ### 2. Install the Systemd Service
@@ -121,8 +124,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=jellyfin
-Group=jellyfin
+User=zaplink
+Group=zaplink
 WorkingDirectory=/opt/zaplink
 ExecStart=/usr/bin/node index.js
 Restart=always
@@ -324,7 +327,7 @@ If you update your `channels.conf` or notice your guide is stale/incorrect in Je
 1. **Stop Jellyfin Server**:
 
     ```bash
-    sudo systemctl stop jellyfin
+    sudo systemctl stop zaplink
     ```
 
 2. **Delete the Cache Directories**:

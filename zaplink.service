@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=jellyfin
-Group=jellyfin
+User=zaplink
+Group=zaplink
 WorkingDirectory=/opt/zaplink
 ExecStart=/usr/bin/node index.js
 Restart=always
