@@ -1186,10 +1186,11 @@
 
             renderGuide();
 
-            if (isAdding) {
-                const guideBody = document.getElementById('guide-body');
-                if (guideBody) guideBody.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+            // Force jump to top to see the new pinned result
+            setTimeout(() => {
+                const gb = document.getElementById('guide-body');
+                if (gb) gb.scrollTop = 0;
+            }, 0);
         }
 
         async function openChannelDetail(num, name, icon) {
