@@ -1187,10 +1187,18 @@
             renderGuide();
 
             // Force jump to top to see the new pinned result
+            // Increased timeout to ensure DOM is fully repainted
             setTimeout(() => {
-                const gb = document.getElementById('guide-body');
-                if (gb) gb.scrollTop = 0;
-            }, 0);
+                const targets = [
+                    document.getElementById('guide-body'),
+                    document.documentElement,
+                    document.body
+                ];
+
+                targets.forEach(t => {
+                    if (t) t.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }, 100);
         }
 
         async function openChannelDetail(num, name, icon) {
