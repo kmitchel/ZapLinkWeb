@@ -25,6 +25,59 @@
             --row-height: 80px;
         }
 
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .toast {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 300px;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .toast.success {
+            border-left-color: #22c55e;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+        }
+
         * {
             box-sizing: border-box;
         }
@@ -668,6 +721,10 @@
             <div class="video-box"><video id="videoElement" controls></video></div>
         </div>
     </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.min.js"></script>
     <script>
@@ -825,19 +882,30 @@
             }, 250);
         }
 
-        async function stopActiveRecording(num, start) {
-            if (confirm('Stop this active recording?')) {
-                const res = await fetch('/api/recordings/stop', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ channel_num: num, start_time: start })
-                });
-                if (res.ok) {
-                    alert('Recording stopped.');
-                    closeDetails();
-                    loadGuide();
-                    loadRecordings();
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<div>${msg}</div>`;
+            container.appendChild(toast);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        async function copy(text) {
+            try {
+                // If text is a relative path, make it absolute
+                if (text.startsWith('/')) {
+                    text = window.location.origin + text;
                 }
+                await navigator.clipboard.writeText(text);
+                showToast('Link copied to clipboard!', 'success');
+            } catch (err) {
+                showToast('Failed to copy link.', 'error');
             }
         }
 
@@ -846,16 +914,44 @@
             document.getElementById('details-panel').style.display = 'none';
         }
 
-        async function schedule(type, title, num, start, end) {
-            const res = await fetch('/api/timers', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, title, channel_num: num, start_time: start, end_time: end })
-            });
-            if (res.ok) {
-                alert(`${type === 'series' ? 'Series' : 'Program'} scheduled!`);
-                closeDetails();
-                loadGuide();
+        // --- SCHEDULING ---
+        async function schedule(type, title, channelNum, start, end) {
+            const data = { type, title, channel_num: channelNum, start_time: start, end_time: end };
+            try {
+                const r = await fetch('/api/timers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (r.ok) {
+                    showToast(type === 'series' ? `Series recording set for "${title}"` : `Recording set for "${title}"`, 'success');
+                    closeDetails();
+                    loadGuide(); // Refresh to show scheduled status
+                } else {
+                    showToast('Failed to schedule recording.', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Network error while scheduling.', 'error');
+            }
+        }
+
+        async function stopActiveRecording(channelNum, startTime) {
+            try {
+                const r = await fetch('/api/recordings/stop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channel_num: channelNum, start_time: startTime })
+                });
+                if (r.ok) {
+                    showToast('Recording stopped.', 'success');
+                    closeDetails();
+                    loadGuide();
+                } else {
+                    showToast('Failed to stop recording.', 'error');
+                }
+            } catch (e) {
+                showToast('Error stopping recording.', 'error');
             }
         }
 
