@@ -372,6 +372,20 @@
             animation: pulse 1.5s infinite;
         }
 
+        .program-tile.failed {
+            border-style: solid;
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .program-tile.failed::after {
+            content: '⚠️';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.8rem;
+        }
+
         @keyframes pulse {
             0% {
                 opacity: 1;
@@ -784,8 +798,9 @@
                     const isActive = Date.now() >= p.start && Date.now() < p.end;
                     const isScheduled = p.scheduled ? 'scheduled' : '';
                     const isRecording = p.recording ? 'recording' : '';
+                    const isFailed = p.failed ? 'failed' : '';
                     return `
-                        <div class="program-tile ${isActive ? 'active' : ''} ${isScheduled} ${isRecording}"
+                        <div class="program-tile ${isActive ? 'active' : ''} ${isScheduled} ${isRecording} ${isFailed}"
                              style="left: ${left}px; width: ${width - 2}px"
                              onclick="showDetails('${chan.number}', '${chan.name.replace(/'/g, "\\'")}', ${JSON.stringify(p).replace(/"/g, '&quot;')}, '${chan.icon || ''}')"
                              ondblclick="playLive('${chan.number}', '${chan.name.replace(/'/g, "\\'")}', '${p.title.replace(/'/g, "\\'")}')">
@@ -836,7 +851,13 @@
             clickTimer = setTimeout(() => {
                 document.getElementById('det-title').textContent = p.title;
                 document.getElementById('det-time').textContent = `${new Date(p.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(p.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
-                document.getElementById('det-desc').textContent = p.description || 'No description.';
+
+                let statusText = '';
+                if (p.recording) statusText = 'Currently Recording';
+                else if (p.failed) statusText = 'Recording Failed';
+                else if (p.scheduled) statusText = 'Scheduled to Record';
+
+                document.getElementById('det-desc').innerHTML = (statusText ? `<strong style="color:var(--accent-color)">[${statusText}]</strong><br>` : '') + (p.description || 'No description.');
 
                 const iconBox = document.getElementById('det-icon');
                 iconBox.innerHTML = icon ? `<img src="${icon}">` : name.charAt(0);
@@ -856,7 +877,7 @@
                     document.getElementById('stop-recording-btn').style.display = 'inline-flex';
                     document.getElementById('record-once-btn').style.display = 'none';
                     document.getElementById('record-series-btn').style.display = 'none';
-                } else if (p.scheduled) {
+                } else if (p.scheduled && !p.failed) {
                     document.getElementById('stop-recording-btn').style.display = 'none';
                     document.getElementById('record-once-btn').style.display = 'inline-flex';
                     document.getElementById('record-series-btn').style.display = 'inline-flex';
