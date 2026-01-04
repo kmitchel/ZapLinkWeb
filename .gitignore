@@ -21,3 +21,4 @@ test_logos.js
 *.db-journal
 *.db-shm
 *.db-wal
+scripts/*.conf
