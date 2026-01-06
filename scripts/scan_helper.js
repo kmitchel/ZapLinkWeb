@@ -151,6 +151,11 @@ function runScanPrompt(scanFile) {
                         console.log(`📺 Found: [${match[1]}] ${name}`);
                         return;
                     }
+
+                    // Catch generic errors so silent failures don't happen
+                    if (/error|failed|busy|denied|permission|opening/i.test(cleanLine)) {
+                        console.log(`❌ ${cleanLine}`);
+                    }
                 });
             };
 
