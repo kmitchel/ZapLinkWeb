@@ -1,373 +1,240 @@
-# ZapLink 📺
+# ZapLinkWeb ⚡
 
-A high-performance ExpressJS server for turning your USB DVB/ATSC tuners into a network-accessible M3U playlist with full XMLTV Electronic Program Guide (EPG) support.
+A high-performance C server that provides a web dashboard and streaming proxy for ZapLinkCore ATSC tuners.
 
 ## 🚀 Features
 
-- **Multi-Tuner Support**: Automatically discovers and manages multiple tuners in `/dev/dvb`.
-- **EPG Engine**: Built-in parser for ATSC (EIT/VCT) and DVB program guides.
-- **Smart Mapping**: Automatically maps ATSC Source IDs to Virtual Channel numbers (e.g., 55.1).
-- **XMLTV Excellence**: Generates standard XMLTV files with local timezone support and proper entity escaping (no more "Rizzoli & Isles" ampersand crashes).
-- **Smart Disambiguation**: Tunes using Virtual Channel numbers instead of section names, allowing multiple channels with the same name (e.g., "Bounce") to coexist without conflict.
-- **Hardware & Software Transcoding**: Robust support for Intel **QSV**, NVIDIA **NVENC**, and **VA-API** hardware acceleration, plus specialized software transcoding.
-- **Multiple Codecs**: Choice of **H.264**, **H.265 (HEVC)**, or **AV1** output for any transcoding mode.
-- **Smart Scanning**: Only runs a full EPG scan on startup if the database is missing; otherwise refreshes every 15 minutes.
-- **Interactive Dashboard**: Modern web interface to view "Now Playing" status and launch streams directly.
-- **Real-time Updates**: WebSocket integration for live feedback on scans, tuner status, and recordings.
-- **Round-Robin Preemption**: Distributes tuner load and supports preemption logic.
+- **Pure C Implementation**: Lightweight, fast, no runtime dependencies.
+- **mDNS Discovery**: Automatically discovers ZapLinkCore instances on the network.
+- **Flexible Transcoding**: Hardware (QSV, NVENC, VA-API) and software transcoding.
+- **Multiple Codecs**: H.264, HEVC, AV1, or passthrough copy.
+- **DVR Recording**: Schedule recordings with automatic start/stop.
+- **M3U Playlist**: Generate playlists with custom transcode parameters.
+- **Modern Dashboard**: Web interface for channel browsing, EPG, and playback.
+- **Pretty Logging**: Colored, timestamped output with verbose mode.
 
 ## 📸 Dashboard Preview
 
-| **Main Guide** | **Favorites Pinned** |
+| **Main Guide** | **Channel Detail** |
 |:---:|:---:|
-| <img src="screenshots/01_dashboard.png" width="400" /> | <img src="screenshots/02_favorites.png" width="400" /> |
-
-| **Channel Detail (7-Day)** | **Program Details** |
-|:---:|:---:|
-| <img src="screenshots/03_channel_detail.png" width="400" /> | <img src="screenshots/04_program_detail.png" width="400" /> |
+| <img src="screenshots/01_dashboard.png" width="400" /> | <img src="screenshots/03_channel_detail.png" width="400" /> |
 
 ## 🛠️ Prerequisites
 
-- **Node.js**: v18 or higher.
-- **dvbv5-zap**: Part of the `v4l-utils` package.
-- **FFmpeg**: For streaming and transcoding.
-- **SQLite3**: For EPG data storage.
+- **GCC**: C compiler with C99 support
+- **FFmpeg**: For transcoding (must be in PATH)
+- **SQLite3**: Development headers
+- **Avahi**: mDNS/DNS-SD library
+- **ZapLinkCore**: Running on localhost or network
 
 ```bash
+# Arch Linux
+sudo pacman -S gcc sqlite avahi ffmpeg
+
 # Ubuntu/Debian
-sudo apt update
-sudo apt install v4l-utils ffmpeg nodejs npm sqlite3
+sudo apt install build-essential libsqlite3-dev libavahi-client-dev ffmpeg
 ```
 
 ## 📦 Installation
 
-1. Clone the repository into `/opt`:
-
-    ```bash
-    # Replace with your repository URL
-    sudo git clone https://github.com/kmitchel/zaplink.git /opt/zaplink
-    cd /opt/zaplink
-    ```
-
-2. Set permissions for the `zaplink` user:
-
-    ```bash
-    sudo chown -R zaplink:zaplink /opt/zaplink
-    ```
-
-3. Install dependencies:
-
-    ```bash
-    sudo -u zaplink npm install
-    ```
-
-4. **Generate Channel Configuration**:
-
-    We provide an interactive helper script to fetch channel data from RabbitEars and generate a configuration file optimized for US broadcasts.
-
-    ```bash
-    sudo -u zaplink npm run scan-channels
-    ```
-
-    Follow the interactive prompts to enter your zip code.
-    > [!WARNING]
-    > **VHF Channels (2-13)**: These lower frequency channels propagate further but often have weaker signal strength on modern "digital" antennas (there is nothing modern or digital about an antenna; RF is RF, and a UHF antenna is just a UHF antenna), which are primarily designed for UHF. If scanning takes a very long time or fails, use the option to **skip VHF channels** when prompted.
-
-    Once the scan is complete, move the generated file to `/opt/zaplink/channels.conf`:
-
-    ```bash
-    mv scripts/channels.conf channels.conf
-    sudo chown zaplink:zaplink channels.conf
-    ```
-
-5. **Channel Icons (Optional)**:
-   Create a `logos.json` in the project root to map channel numbers or names to icon URLs. An example file `logos.json.example` is provided:
-    ```bash
-    cp logos.json.example logos.json
-    ```
-    **Example `logos.json` structure:**
-    ```json
-    {
-        "15.1": "https://example.com/abc-logo.png",
-        "55.2": "https://example.com/bounce.png"
-    }
-    ```
-    The app will automatically include these in the M3U (`tvg-logo`) and XMLTV (`<icon src="..." />`) outputs.
-    ```bash
-    sudo chown zaplink:zaplink logos.json
-    ```
-
-## ⚙️ Systemd Service & Permissions
-
-Running the application with `sudo` is discouraged for security reasons. Follow these steps to run the tuner as the `zaplink` user.
-
-### 1. Configure User Permissions
-
-The `zaplink` user needs access to the application files, the DVB hardware, and the Intel GPU (for QSV).
+### Development Build
 
 ```bash
-# Create the zaplink system user
-sudo useradd -r -s /usr/sbin/nologin zaplink
-
-# Set ownership of the application directory
-sudo chown -R zaplink:zaplink /opt/zaplink
-
-# Add zaplink to necessary groups (video, render, and tvheadend)
-sudo usermod -aG video,render,tvheadend zaplink
+git clone https://github.com/kmitchel/ZapLinkWeb.git
+cd ZapLinkWeb
+make
+./build/zaplinkweb
 ```
 
-### 2. Install the Systemd Service
-
-You can either link the service file directly from the repository (recommended for easy updates) or create it manually.
-
-#### Option A: Link the service file (Recommended)
-
-This method links the service file from the project directory, so updates to the file in the repository are automatically applied.
+### Production Install
 
 ```bash
-sudo systemctl link /opt/zaplink/zaplink.service
+# Build and install to /opt/zaplink
+sudo make install
+
+# Enable and start service
+sudo systemctl enable --now zaplinkweb
 ```
 
-#### Option B: Create manually
+The install target:
+- Creates `/opt/zaplink` directory
+- Creates `zaplink` system user
+- Installs binary, public assets, database
+- Configures systemd service
 
-If you prefer to create the file manually at `/etc/systemd/system/zaplink.service`:
+### Uninstall
 
 ```bash
-sudo nano /etc/systemd/system/zaplink.service
+sudo make uninstall
 ```
+> Note: Database and recordings in `/opt/zaplink` are preserved.
 
-**Service File Content:**
+## ⚙️ Configuration
+
+Runtime settings are stored in `zaplink.conf`:
 
 ```ini
-[Unit]
-Description=ZapLink Service
-After=network.target
-
-[Service]
-Type=simple
-User=zaplink
-Group=zaplink
-WorkingDirectory=/opt/zaplink
-ExecStart=/usr/bin/node index.js
-Restart=always
-
-# Transcoding mode: none (direct copy), soft, qsv, nvenc, vaapi
-Environment=TRANSCODE_MODE=none
-
-# Video codec: h264, h265, av1
-Environment=TRANSCODE_CODEC=h264
-Environment=ENABLE_EPG=true
-
-# Access to DVB and GPU hardware
-SupplementaryGroups=video render
-
-[Install]
-WantedBy=multi-user.target
+TRANSCODE_BACKEND=software
+TRANSCODE_CODEC=h264
 ```
 
-### 3. Enable and Start
+These can be changed via the web dashboard Settings panel.
+
+### Command Line Options
 
 ```bash
-# Reload systemd to recognize the new service
-sudo systemctl daemon-reload
+./build/zaplinkweb [-v] [-h]
 
-# Enable (start on boot) and start the service now
-sudo systemctl enable --now zaplink
-
-# Verify it is running
-sudo systemctl status zaplink
+  -v    Enable verbose/debug logging
+  -h    Show help
 ```
-
-## 🚦 Usage
-
-Once the service is active, the server is available on port `3000` (default). It will automatically restart if it crashes or the system reboots.
-
-### Environment Variables
-
-| Variable            | Description                                                | Default           |
-| :------------------ | :--------------------------------------------------------- | :---------------- |
-| `PORT`              | Server port                                                | `3000`            |
-| `CHANNELS_CONF`     | Path to your channels file                                 | `./channels.conf` |
-| `TRANSCODE_MODE`    | Transcoding mode (`none`, `soft`, `qsv`, `nvenc`, `vaapi`) | `none`            |
-| `TRANSCODE_CODEC`   | Video codec (`h264`, `h265`, `av1`)                        | `h264`            |
-| `ENABLE_PREEMPTION` | Allow tuners to be stolen                                  | `false`           |
-| `ENABLE_EPG`        | Enable EPG scanning                                        | `true`            |
-| `VERBOSE_LOGGING`   | Enable deep debug logs                                     | `false`           |
-
-> [!NOTE]
-> When `TRANSCODE_CODEC=av1` is selected, the stream automatically switches from the MPEG-TS container to **Matroska (.mkv)** for compatibility.
-
-## 🐳 Docker Deployment
-
-You can also run ZapLink using Docker, which simplifies dependency management.
-
-### 1. Build and Run with Docker Compose
-
-Ensuring your `channels.conf` is in the project root:
-
-```bash
-docker-compose up -d --build
-```
-
-### 2. Manual Docker Build & Run
-
-```bash
-# Build the image
-docker build -t zaplink .
-
-# Run the container
-docker run -d \
-  --name zaplink \
-  --privileged \
-  --network host \
-  -v $(pwd)/channels.conf:/app/channels.conf \
-  -v $(pwd)/logos.json:/app/logos.json \
-  -v $(pwd)/epg.db:/app/epg.db \
-  -v /dev/dvb:/dev/dvb \
-  zaplink
-```
-
-**Note:** The `--privileged` flag and `--network host` are recommended for reliable access to DVB hardware and low-latency streaming.
-
-### 🎮 Hardware Acceleration
-
-To use hardware transcoding in Docker, you must pass through your GPU hardware to the container.
-
-#### 🔹 Intel Quick Sync (QSV)
-
-Requires a `Gen 7` or newer Intel iGPU.
-
-- **Compose**:
-    ```yaml
-    devices:
-        - /dev/dri:/dev/dri
-    environment:
-        - TRANSCODE_MODE=qsv
-        - TRANSCODE_CODEC=h264
-    ```
-- **CLI**:
-    ```bash
-    docker run [...] --device /dev/dri:/dev/dri -e TRANSCODE_MODE=qsv -e TRANSCODE_CODEC=h264 zaplink
-    ```
-
-#### 🔹 NVIDIA (NVENC)
-
-Requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
-
-- **Compose**:
-    ```yaml
-    deploy:
-        resources:
-            reservations:
-                devices:
-                    - driver: nvidia
-                      count: 1
-                      capabilities: [gpu]
-    environment:
-        - TRANSCODE_MODE=nvenc
-        - TRANSCODE_CODEC=h264
-    ```
-- **CLI**:
-    ```bash
-    docker run [...] --gpus all -e TRANSCODE_MODE=nvenc -e TRANSCODE_CODEC=h264 zaplink
-    ```
-
-#### 🔹 AMD/Intel (VA-API)
-
-The open standard for Linux. Useful if QSV isn't working or for AMD GPUs.
-
-- **Compose**:
-    ```yaml
-    devices:
-        - /dev/dri:/dev/dri
-    environment:
-        - TRANSCODE_MODE=vaapi
-        - TRANSCODE_CODEC=h264
-    ```
-- **CLI**:
-    ```bash
-    docker run [...] --device /dev/dri:/dev/dri -e TRANSCODE_MODE=vaapi -e TRANSCODE_CODEC=h264 zaplink
-    ```
 
 ## 🔗 Endpoints
 
-ZapLink provides several endpoints for both media players and programmatic access via a JSON API.
-
 ### 📺 Media Endpoints
 
-| Endpoint | Description | Parameters |
-| :--- | :--- | :--- |
-| `/playlist.m3u` | **M3U Playlist** for Jellyfin/VLC. | `f`: format (ts, mp4, mkv)<br>`c`: codec (copy, h264, h265, av1) |
-| `/xmltv.xml` | **XMLTV Guide** data. | None |
-| `/stream/:channel` | **Live Stream** a channel. | **Path**: `/:format/:codec`<br>**Query**: `?f=...&c=...` |
+| Endpoint | Description |
+| :--- | :--- |
+| `/playlist.m3u` | M3U playlist for Jellyfin/VLC |
+| `/stream/:channel` | Live stream (uses dashboard config) |
+| `/transcode/.../:channel` | Custom transcode stream |
 
-**Stream Example**: `http://localhost:3000/stream/5.1/mp4/h264`
+### M3U Playlist Parameters
+
+Generate playlists with specific transcode settings:
+
+```bash
+# Default (software h264)
+curl http://localhost:3000/playlist.m3u
+
+# Hardware HEVC at 8Mbps with 5.1 audio
+curl "http://localhost:3000/playlist.m3u?backend=vaapi&codec=hevc&bitrate=8000&ac6=1"
+```
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `backend` | software, qsv, nvenc, vaapi | Hardware acceleration |
+| `codec` | h264, hevc, av1, copy | Video codec |
+| `bitrate` | integer | Video bitrate in kbps |
+| `ac6` | 1 | Enable 5.1 surround audio |
+
+### Transcode URL Format
+
+Direct transcode URLs use path segments:
+
+```
+/transcode/{backend}/{codec}/{bitrate}/{audio}/{channel}
+
+Examples:
+/transcode/vaapi/hevc/15.1
+/transcode/qsv/h264/b8000/21.1
+/transcode/software/av1/ac6/33.1
+/transcode/copy/15.1
+```
 
 ### 🛠️ JSON API
 
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
-| `/api/guide` | `GET` | Returns full channel list with 12h of program data. |
-| `/api/now-playing`| `GET` | Quick snapshot of what is currently on every channel. |
-| `/api/timers` | `GET` | List all scheduled recordings (once or series). |
-| `/api/timers` | `POST` | Schedule a recording. |
-| `/api/recordings` | `GET` | List all completed and active recordings. |
-| `/api/play/:id` | `GET` | Stream a recording with optional transcoding. |
-| `/api/version` | `GET` | Returns the current build hash and version. |
+| `/api/status` | GET | Server status and active recordings |
+| `/api/channels` | GET | Channel list from channels.conf |
+| `/api/guide` | GET | EPG data (proxied from ZapLinkCore) |
+| `/api/recordings` | GET | List all recordings |
+| `/api/recordings/:id/stop` | POST | Stop an active recording |
+| `/api/timers` | GET | List scheduled recordings |
+| `/api/timers` | POST | Schedule a new recording |
+| `/api/play/:id/...` | GET | Play recording with transcode options |
+| `/api/config` | GET/POST | Get/set transcode configuration |
 
-### 📡 WebSocket API
+## 🎮 Hardware Acceleration
 
-The server broadcasts real-time updates to all connected clients.
+### Intel Quick Sync (QSV)
 
-| Event Type | Description | Data Fields |
-| :--- | :--- | :--- |
-| `tuner_status` | Status of hardware tuners. | `tunerId`, `status` (acquired, released, scanning) |
-| `epg_scan_progress` | Progress of background EPG scans. | `currentMux`, `totalMuxes`, `percent` |
-| `recording_status` | Updates on DVR recording jobs. | `recId`, `status` (starting, recording, finished, failed) |
+Requires Intel iGPU (Gen 7+). User needs `video` and `render` group access.
 
-## 🧠 Technical Details
+```bash
+sudo usermod -aG video,render $USER
+```
 
-### EPG Storage
+### NVIDIA NVENC
 
-EPG data is stored in `epg.db`. The application enforces a strict uniqueness constraint on `(channel, start_time)` to prevent duplicate entries even when receiving redundant data from multiple muxes.
+Requires NVIDIA GPU with NVENC support and proper drivers.
 
-### ATSC Parsing
+### VA-API
 
-The parser handles Multi-String Structure (MSS) titles and correctly handles GPS-to-Unix epoch conversions, including duration bitmask fixes for North American broadcasts.
+Works with Intel and AMD GPUs on Linux. Requires `vainfo` to verify support.
 
-### Channel Disambiguation
+```bash
+vainfo  # Check VA-API support
+```
 
-The application uses the `VCHANNEL` number for tuning via `dvbv5-zap` instead of the section name. This means that if your `channels.conf` has multiple sections named `[Bounce]`, they will all stay as-is, and the app will reliably choose the correct one based on its unique subchannel number (e.g., 55.1 vs 55.2).
+## 🧠 Architecture
+
+```
+┌─────────────────┐     mDNS      ┌──────────────┐
+│   ZapLinkWeb    │◄─────────────►│  ZapLinkCore │
+│   (Port 3000)   │               │ (Port 18392) │
+└────────┬────────┘               └──────┬───────┘
+         │                               │
+         │ HTTP/Transcode                │ Raw Streams
+         ▼                               ▼
+    ┌─────────┐                    ┌──────────┐
+    │ Browser │                    │ USB Tuner│
+    │   VLC   │                    │  /dev/dvb│
+    │ Jellyfin│                    └──────────┘
+    └─────────┘
+```
+
+### Key Components
+
+| File | Purpose |
+|------|---------|
+| `main.c` | Entry point, signal handling |
+| `web.c` | HTTP server and routing |
+| `transcode.c` | FFmpeg process management |
+| `scheduler.c` | DVR recording scheduler |
+| `discovery.c` | mDNS service discovery |
+| `channels.c` | channels.conf parser |
+| `db.c` | SQLite database operations |
+
+## 📁 Project Structure
+
+```
+ZapLinkWeb/
+├── include/          # Header files
+├── src/              # C source files
+├── public/           # Web dashboard (HTML/CSS/JS)
+├── build/            # Compiled output
+├── recordings/       # DVR recordings
+├── channels.conf     # Channel configuration
+├── zaplinkweb.db     # SQLite database
+└── zaplink.conf      # Runtime configuration
+```
 
 ## 🔧 Troubleshooting
 
-### Clearing Jellyfin EPG Cache
+### Port Already in Use
 
-If you update your `channels.conf` or notice your guide is stale/incorrect in Jellyfin, you may need to clear Jellyfin's internal XMLTV cache. Jellyfin sometimes caches the XML structure even if the file on disk has changed.
+```bash
+fuser -k 3000/tcp
+```
 
-1. **Stop Jellyfin Server**:
+### ZapLinkCore Not Discovered
 
-    ```bash
-    sudo systemctl stop zaplink
-    ```
+Check that ZapLinkCore is running and advertising via mDNS:
 
-2. **Delete the Cache Directories**:
-    - **Native Linux (Debian/Ubuntu)**:
-        ```bash
-        sudo rm -rf /var/cache/jellyfin/xmltv/
-        sudo rm -rf /var/cache/jellyfin/*_channels
-        ```
-    - **Docker**:
-      Locate your mapped `cache` volume and delete the `xmltv` folder within it.
+```bash
+avahi-browse -r _http._tcp
+```
 
-3. **Start Jellyfin Server**:
+### FFmpeg Errors
 
-    ```bash
-    sudo systemctl start jellyfin
-    ```
+Run with `-v` flag to see debug output. Verify FFmpeg is in PATH:
 
-4. **Refresh Guide Data**:
-   In the Jellyfin Dashboard, go to **Live TV** and click **Refresh Guide Data**.
+```bash
+which ffmpeg
+ffmpeg -version
+```
 
 ## 📄 License
 
@@ -375,8 +242,11 @@ ISC
 
 ## 🧪 Status
 
-This project is currently under active development. The latest version features:
+**Version 2.0** - Complete C rewrite of the original Node.js application.
 
-- **Real-time WebSockets**: Live status updates for EPG scans and tuner activity.
-- **Native H.264/MP4 Streaming**: Live TV and recordings stream in browser-compatible formats.
-- **Transcoding Polish**: Significant improvements to HLS and file transcoding stability.
+- ✅ Transcoding with hardware acceleration
+- ✅ DVR scheduling and recording
+- ✅ M3U playlist generation
+- ✅ Web dashboard with EPG
+- ✅ mDNS service discovery
+- ✅ Pretty logging system

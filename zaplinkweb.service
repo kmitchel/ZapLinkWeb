@@ -1,0 +1,15 @@
+[Unit]
+Description=ZapLinkWeb C Server
+After=network.target zaplinkcore.service
+
+[Service]
+Type=simple
+User=kmitchel
+WorkingDirectory=/home/kmitchel/dev/ZapLinkWeb
+ExecStart=/home/kmitchel/dev/ZapLinkWeb/build/zaplinkweb
+Restart=always
+RestartSec=5
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target
